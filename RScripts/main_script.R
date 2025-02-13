@@ -248,78 +248,39 @@ mix_sim_data <- sim_formated_data |> rename("Log10CFU" = Log10CFU_CSF) |> filter
 
 source("RScripts/pkpd_fitting_script.R")
 
-# Print a progress message in the console
+generate_PKPD_fit_data <- function(corrData) {
+  
+  correlation_data <- corrData |>
+    unnest(c(data)) |> # Unwrap the main dataset
+    select(STRN, MIC, DoseGroup, ID, AMT, time, B0, PKPD_Index, value, Log10CFU, deltaLog10CFU, Rsq, Adj.Rsq) |>
+    filter(ID > 0) |>
+    # Facet_grid order by name, so this fix AUC/MIC displayed before Cmax
+    mutate(PKPD_Index = case_when(
+      PKPD_Index %in% c("CENTRAL_Cmax", "CSF_Cmax") ~ "I1_Cmax",
+      PKPD_Index %in% c("CENTRAL_AUC_MIC", "CSF_AUC_MIC") ~ "I2_AUC",
+      PKPD_Index %in% c("CENTRAL_ToverMIC", "CSF_ToverMIC") ~ "I3_ToverMIC",
+      PKPD_Index %in% c("CENTRAL_ToverMIC_4X", "CSF_ToverMIC_4X") ~ "I4_ToverMIC_4X",
+      PKPD_Index %in% c("CENTRAL_ToverMIC_10X", "CSF_ToverMIC_10X") ~ "I5_ToverMIC_10X",
+      TRUE ~ PKPD_Index
+    ))
+  
+  return(correlation_data)
+}
+
+# Print progress messages in the console
 message("Estimate correlation parameters:")
+
 message(" - Plasma... (1/3)")
+plasma_corrCurve_data <- index_PKPD_fit_curve(plasma_sim_data)
+plasma_sim_data <- generate_PKPD_fit_data(plasma_corrCurve_data)
 
-#######
-##  Plasma
-######
-# Launch the NLS fit to estimate parameters of the PKPD curve
-plasma_corrCurve_data <- rbind(index_PKPD_fit_curve(plasma_sim_data))
-
-# Override sim_data to add Rsq and Adj.Rsq from corrCurve. Also use a conventional name for Indexes.
-plasma_sim_data <- plasma_corrCurve_data |>
-  unnest(c(data)) |> # Unwrap the main dataset
-  select(STRN, MIC, DoseGroup, ID, AMT, time, B0, PKPD_Index, value, Log10CFU, deltaLog10CFU, Rsq, Adj.Rsq) |>
-  filter(ID > 0) |>
-  # Facet_grid order by name, so this fix AUC/MIC displayed before Cmax
-  mutate(PKPD_Index = case_when(
-    PKPD_Index == "CENTRAL_Cmax" ~ "I1_Cmax",
-    PKPD_Index == "CENTRAL_AUC_MIC" ~ "I2_AUC",
-    PKPD_Index == "CENTRAL_ToverMIC" ~ "I3_ToverMIC",
-    PKPD_Index == "CENTRAL_ToverMIC_4X" ~ "I4_ToverMIC_4X",
-    PKPD_Index == "CENTRAL_ToverMIC_10X" ~ "I5_ToverMIC_10X",
-    TRUE ~ PKPD_Index
-  ))
-
-#######
-##  CSF
-######
-# Print a progress message in the console
 message(" - CSF... (2/3)")
+csf_corrCurve_data <- index_PKPD_fit_curve(csf_sim_data)
+csf_sim_data <- generate_PKPD_fit_data(csf_corrCurve_data)
 
-# Launch the correlation model to estimate parameters of the PKPD curve
-csf_corrCurve_data <- rbind(index_PKPD_fit_curve(csf_sim_data))
-
-# Override sim_data to add Rsq and Adj.Rsq from corrCurve. Also use a conventional name for Indexes.
-csf_sim_data <- csf_corrCurve_data |>
-  unnest(c(data)) |> # Unwrap the main dataset
-  select(STRN, MIC, DoseGroup, ID, AMT, time, B0, PKPD_Index, value, Log10CFU, deltaLog10CFU, Rsq, Adj.Rsq) |>
-  filter(ID > 0) |>
-  # Facet_grid order by name, so this fix AUC/MIC displayed before Cmax
-  mutate(PKPD_Index = case_when(
-    PKPD_Index == "CSF_Cmax" ~ "I1_Cmax",
-    PKPD_Index == "CSF_AUC_MIC" ~ "I2_AUC",
-    PKPD_Index == "CSF_ToverMIC" ~ "I3_ToverMIC",
-    PKPD_Index == "CSF_ToverMIC_4X" ~ "I4_ToverMIC_4X",
-    PKPD_Index == "CSF_ToverMIC_10X" ~ "I5_ToverMIC_10X",
-    TRUE ~ PKPD_Index
-  ))
-
-#######
-##  CSF with Plasma indexes
-######
-# Print a progress message in the console
 message(" - CSF with Plasma indexes... (3/3)")
-
-# Launch the NLS fit to estimate parameters of the PKPD curve
-mix_corrCurve_data <- rbind(index_PKPD_fit_curve(mix_sim_data))
-
-# Override sim_data to add Rsq and Adj.Rsq from corrCurve. Also use a conventional name for Indexes.
-mix_sim_data <- mix_corrCurve_data |>
-  unnest(c(data)) |> # Unwrap the main dataset
-  select(STRN, MIC, DoseGroup, ID, AMT, time, B0, PKPD_Index, value, Log10CFU, deltaLog10CFU, Rsq, Adj.Rsq) |>
-  filter(ID > 0) |>
-  # Facet_grid order by name, so this fix AUC/MIC displayed before Cmax
-  mutate(PKPD_Index = case_when(
-    PKPD_Index == "CENTRAL_Cmax" ~ "I1_Cmax",
-    PKPD_Index == "CENTRAL_AUC_MIC" ~ "I2_AUC",
-    PKPD_Index == "CENTRAL_ToverMIC" ~ "I3_ToverMIC",
-    PKPD_Index == "CENTRAL_ToverMIC_4X" ~ "I4_ToverMIC_4X",
-    PKPD_Index == "CENTRAL_ToverMIC_10X" ~ "I5_ToverMIC_10X",
-    TRUE ~ PKPD_Index
-  ))
+mix_corrCurve_data <- index_PKPD_fit_curve(mix_sim_data)
+mix_sim_data <- generate_PKPD_fit_data(mix_corrCurve_data)
 
 #############################################################################
 ###########                Generate predicted data                ###########                       
