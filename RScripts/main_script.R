@@ -291,67 +291,28 @@ message("Generate predicted data & Obs mean data...")
 
 # These data are used to generate the correlation curve from the estimate parameters precendently.
 # Generic function to generate predicted data from the correlation curve
-generate_pred_data <- function(data, target) {
+generate_pred_data <- function(data) {
   
-  # Filter by STRN, recover B0 for each strain, and expand the dataset to have a value from 0.1 to 1000 
-  # and calculate the pred values
   pred_data <- data |>
     select(-c("data", "nls")) |> 
     group_by(PKPD_Index, I0, Imax, IC50, H)  |>
     expand(value = seq(0.1, 1000, 0.1)) |>
-    mutate(pred = Imax_model(value, I0, Imax, IC50, H))
+    mutate(pred = Imax_model(value, I0, Imax, IC50, H)) |>
+    mutate(PKPD_Index = case_when(
+      PKPD_Index %in% c("CENTRAL_Cmax", "CSF_Cmax") ~ "I1_Cmax",
+      PKPD_Index %in% c("CENTRAL_AUC_MIC", "CSF_AUC_MIC") ~ "I2_AUC",
+      PKPD_Index %in% c("CENTRAL_ToverMIC", "CSF_ToverMIC") ~ "I3_ToverMIC",
+      PKPD_Index %in% c("CENTRAL_ToverMIC_4X", "CSF_ToverMIC_4X") ~ "I4_ToverMIC_4X",
+      PKPD_Index %in% c("CENTRAL_ToverMIC_10X", "CSF_ToverMIC_10X") ~ "I5_ToverMIC_10X",
+      TRUE ~ PKPD_Index
+    )) |> filter(!((PKPD_Index %in% c("I3_ToverMIC", "I4_ToverMIC_4X", "I5_ToverMIC_10X")) & value > 100))
   
-  # Depending of the target, we need to filter the data outside of x scaling in plot 
-  # and align indexes names with sim_data
-  if(target == "CSF") {
-    pred_data <- pred_data |>
-      filter(!((PKPD_Index %in% c("CSF_ToverMIC", "CSF_ToverMIC_4X", "CSF_ToverMIC_10X")) & value > 100)) |>
-      # Rename indexes colunms to be align with csf_pkpd_data
-      mutate(PKPD_Index = case_when(
-        PKPD_Index == "CSF_Cmax" ~ "I1_Cmax",
-        PKPD_Index == "CSF_AUC_MIC" ~ "I2_AUC",
-        PKPD_Index == "CSF_ToverMIC" ~ "I3_ToverMIC",
-        PKPD_Index == "CSF_ToverMIC_4X" ~ "I4_ToverMIC_4X",
-        PKPD_Index == "CSF_ToverMIC_10X" ~ "I5_ToverMIC_10X",
-        TRUE ~ PKPD_Index
-      ))
-    return(pred_data)
-    
-  } else if (target == "Plasma") {
-    pred_data <- pred_data |>
-      filter(!((PKPD_Index %in% c("CENTRAL_ToverMIC", "CENTRAL_ToverMIC_4X", "CENTRAL_ToverMIC_10X")) & value > 100)) |>
-      # Rename indexes colunms to be align with csf_pkpd_data
-      mutate(PKPD_Index = case_when(
-        PKPD_Index == "CENTRAL_Cmax" ~ "I1_Cmax",
-        PKPD_Index == "CENTRAL_AUC_MIC" ~ "I2_AUC",
-        PKPD_Index == "CENTRAL_ToverMIC" ~ "I3_ToverMIC",
-        PKPD_Index == "CENTRAL_ToverMIC_4X" ~ "I4_ToverMIC_4X",
-        PKPD_Index == "CENTRAL_ToverMIC_10X" ~ "I5_ToverMIC_10X",
-        TRUE ~ PKPD_Index
-      ))
-    return(pred_data)
-    
-  } else if (target == "Mix") {
-    pred_data <- pred_data |>
-      filter(!((PKPD_Index %in% c("CENTRAL_ToverMIC", "CENTRAL_ToverMIC_4X", "CENTRAL_ToverMIC_10X")) & value > 100)) |>
-      # Rename indexes colunms to be align with csf_pkpd_data
-      mutate(PKPD_Index = case_when(
-        PKPD_Index == "CENTRAL_Cmax" ~ "I1_Cmax",
-        PKPD_Index == "CENTRAL_AUC_MIC" ~ "I2_AUC",
-        PKPD_Index == "CENTRAL_ToverMIC" ~ "I3_ToverMIC",
-        PKPD_Index == "CENTRAL_ToverMIC_4X" ~ "I4_ToverMIC_4X",
-        PKPD_Index == "CENTRAL_ToverMIC_10X" ~ "I5_ToverMIC_10X",
-        TRUE ~ PKPD_Index
-      ))
-    return(pred_data)
-    
-  } else
-    warning("Target doesn't exist !")
+  return(pred_data)
 }
 
-csf_pred_data <- generate_pred_data(csf_corrCurve_data, "CSF")
-plasma_pred_data <- generate_pred_data(plasma_corrCurve_data, "Plasma")
-mix_pred_data <- generate_pred_data(mix_corrCurve_data, "Mix")
+csf_pred_data <- generate_pred_data(csf_corrCurve_data)
+plasma_pred_data <- generate_pred_data(plasma_corrCurve_data)
+mix_pred_data <- generate_pred_data(mix_corrCurve_data)
 
 #############################################################################
 ########          Generate a dataset with observation mean           ########                       
@@ -385,7 +346,7 @@ mix_obs_mean <- mix_sim_data |>
   )
 
 #############################################################################
-########                    Environement cleaning                    ########                       
+########                    Environment cleaning                    ########                       
 #############################################################################
 
 sim_results_fractioned <- list(fractioned_results = fractioned_results, 
