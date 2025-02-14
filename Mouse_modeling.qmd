@@ -97,8 +97,8 @@ mouse_model <- mread("model/Mouse_model_partial_andes")
 
 andes_data <- read_csv("data/andes_pk.csv")
 
-ev05 <- ev(ID = 80, tinf = 0.5, amt = 80, cmt ="A")
-ev06 <- ev(ID = 20, tinf = 0.5, amt = 20, cmt = "A")
+ev05 <- ev(ID = 80, amt = 80, cmt ="A")
+ev06 <- ev(ID = 20, amt = 20, cmt = "A")
 andes_dose <- rbind(ev05@data, ev06@data)
 
 mouse_sim_02 <- mouse_model |>
@@ -124,8 +124,8 @@ ggplot() +
 mouse_model <- mread("model/Mouse_model_full")
 andes_data <- read_csv("data/andes_pk.csv")
 
-ev05 <- ev(ID = 80, tinf = 0.5, amt = 80, cmt ="A")
-ev06 <- ev(ID = 20, tinf = 0.5, amt = 20, cmt = "A")
+ev05 <- ev(ID = 80, amt = 80, cmt ="A")
+ev06 <- ev(ID = 20, amt = 20, cmt = "A")
 andes_dose <- rbind(ev05@data, ev06@data)
 
 mouse_sim_02 <- mouse_model |>
