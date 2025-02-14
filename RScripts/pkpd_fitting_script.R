@@ -155,12 +155,12 @@ index_PKPD_fit_curve <- function(data) {
               summary(.x)$coefficients[4, 2]
             })
   
-  nestedData$Residuals <- 
-    map(nestedData$nls,
+  nestedData$Sd_Residuals <- 
+    map_dbl(nestedData$nls,
             ~ if (anyNA(.x)) {
               return(NA)
             } else {
-              residuals(.x) |> tibble::as_tibble()
+              sd(residuals(.x))
             })
   
   ## Estimate some DeltaCFU targets

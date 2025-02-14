@@ -206,6 +206,8 @@ message("Pre-process data...")
 # Transform and pivot also indexes
 # Drop unused colunms
 sim_formated_data <- rbind(fractioned_24h_full, continuous_inf_24h, control_24h) |>
+  select(-c(ID)) |>
+  mutate(ID = row_number()) |>
   group_by(STRN, DoseGroup, AMT, ID) |>
   mutate(
     CENTRAL_Cmax = Cmax_CENTRAL/MIC,
@@ -470,3 +472,5 @@ rm(fractioned_results, fractioned_24h, fractioned_24h_full,
    csf_obs_mean, plasma_obs_mean, mix_obs_mean,
    csf_corrCurve_data, plasma_corrCurve_data, mix_corrCurve_data,
    model_file, model_list, elapsed)
+
+gc()

@@ -7,18 +7,16 @@ editor_options:
   chunk_output_type: console
 ---
 
-#############################################################################
-###########                       Depencies                       ###########         
-#############################################################################
-Load necessary library and depencies for the project. 
-You can also specify different parameters as PKPD parameters, number of patients, etc.
+## Settings & Dependencies
+
+Load necessary library and dependencies for the project. You can also specify different parameters as PKPD parameters, number of patients, etc.
 
 ```{r}
 #| echo: false
 #| include: false
 
 ####
-## Load depencies
+## Load dependencies
 ####
 library(mrgsolve)       # Simulation package
 library(dplyr)          # Data manipulation
@@ -94,12 +92,9 @@ source("RScripts/main_script.R")
 
 ```
 
-#############################################################################
-###########               PKPD Plots generation                   ###########
-#############################################################################
-Generate PKPD plots binding Log10 CFU variation at 24h to all possible
-PKPD indexes values. Five indexes are used in this study: fCmax/MIC, fAUC/MIC, 
-fT>MIC, fT>MIC 4X, fT>MIC 10X.
+## PKPD Plots generation
+
+This block will generate PKPD plots binding Log10 CFU variation at 24h to all possible PKPD indexes values. Five indexes are used in this study: fCmax/MIC, fAUC/MIC, fT\>MIC, fT\>MIC 4X, fT\>MIC 10X.
 
 ```{r}
 # Load the generic function to generate plots
@@ -123,11 +118,9 @@ mix_plot <- generate_PKPD_plots(obs_data = csf_with_plasma_index_data[["obs_mean
 
 ```
 
-#############################################################################
-###########          Target estimations for each indexes          ###########
-#############################################################################
-Generate a table for each PKPD index with index values for different PD targets 
-(bacteriostasis, 1-log kill, 2-log kill).
+## Target estimations for each indexes
+
+Generate a table with different PD targets (bacteriostasis, 1-log kill, 2-log kill) for each PKPD index with index values. It will also generate a resume of index values for different PD targets.
 
 ```{r}
 # Generic function to find the index value for a specific target. Based on B0 and pred data.
@@ -197,18 +190,92 @@ mix_efficacity = csf_with_plasma_index_data[["correlation_data"]] |>
   pivot_wider(names_from = PKPD_Index, values_from = TargetIndexValue)
 )
 
+# Resume the percentage of data under a certain log-target
+targets_summary <- list(
+  
+  csf_global = csf_data[["sim_data"]] |>
+  ungroup() |>
+  summarise(
+    Stasis_percentage = sum(deltaLog10CFU > 0)/n() * 100,
+    Log1Kill_percentage = sum(deltaLog10CFU < -1)/n() * 100,
+    Log2Kill_percentage = sum(deltaLog10CFU < -2)/n() * 100
+  ),
+  
+  csf_by_DoseGroup = csf_data[["sim_data"]] |>
+  ungroup() |>
+  group_by(DoseGroup) |>
+  summarise(
+    Stasis_percentage = sum(deltaLog10CFU < 0)/n() * 100,
+    Log1Kill_percentage = sum(deltaLog10CFU < -1)/n() * 100,
+    Log2Kill_percentage = sum(deltaLog10CFU < -2)/n() * 100,
+  ) |> filter(DoseGroup != "control"),
+  
+  csf_by_AMT = csf_data[["sim_data"]] |>
+  ungroup() |>
+  group_by(AMT) |>
+  summarise(
+    Stasis_percentage = sum(deltaLog10CFU < 0)/n() * 100,
+    Log1Kill_percentage = sum(deltaLog10CFU < -1)/n() * 100,
+    Log2Kill_percentage = sum(deltaLog10CFU < -2)/n() * 100,
+  ),
+  
+  csf_by_AMT_and_DG = csf_data[["sim_data"]] |>
+  filter(DoseGroup != "continuous_infusion") |>
+  ungroup() |>
+  group_by(DoseGroup, AMT) |>
+  summarise(
+    Stasis_percentage = sum(deltaLog10CFU < 0)/n() * 100,
+    Log1Kill_percentage = sum(deltaLog10CFU < -1)/n() * 100,
+    Log2Kill_percentage = sum(deltaLog10CFU < -2)/n() * 100,
+  ),
+  
+  plasma_global = plasma_data[["sim_data"]] |>
+    ungroup() |>
+    summarise(
+      Stasis_percentage = sum(deltaLog10CFU < 0)/n() * 100,
+      Log1Kill_percentage = sum(deltaLog10CFU < -1)/n() * 100,
+      Log2Kill_percentage = sum(deltaLog10CFU < -2)/n() * 100
+    ),
+  
+  plasma_by_DoseGroup = plasma_data[["sim_data"]] |>
+  ungroup() |>
+  group_by(DoseGroup) |>
+  summarise(
+    Stasis_percentage = sum(deltaLog10CFU < 0)/n() * 100,
+    Log1Kill_percentage = sum(deltaLog10CFU < -1)/n() * 100,
+    Log2Kill_percentage = sum(deltaLog10CFU < -2)/n() * 100
+  ) |> filter(DoseGroup != "control"),
+  
+  plasma_by_AMT = plasma_data[["sim_data"]] |>
+  ungroup() |>
+  group_by(AMT) |>
+  summarise(
+    Stasis_percentage = sum(deltaLog10CFU < 0)/n() * 100,
+    Log1Kill_percentage = sum(deltaLog10CFU < -1)/n() * 100,
+    Log2Kill_percentage = sum(deltaLog10CFU < -2)/n() * 100
+  ),
+  
+  plasma_by_AMT_and_DG = plasma_data[["sim_data"]] |>
+  filter(DoseGroup != "continuous_infusion") |>
+  ungroup() |>
+  group_by(DoseGroup, AMT) |>
+  summarise(
+    Stasis_percentage = sum(deltaLog10CFU < 0)/n() * 100,
+    Log1Kill_percentage = sum(deltaLog10CFU < -1)/n() * 100,
+    Log2Kill_percentage = sum(deltaLog10CFU < -2)/n() * 100,
+  )
+)
 ```
 
-#############################################################################
-###########                 Intermediate analysis                 ###########
-#############################################################################
-Various analysis that can resume our data.
+## Intermediate analysis
+
+We can use various analyses to resume our data. In this block, we can find a resume of PKPD data with different stratification.
 
 ```{r}
 # Resume several differents data in a list
 summary_data <- list(
 # Resume fractioned data at 24h for each AMT & Dose Group
-fractioned_24h = sim_results_fractioned[["fractioned_results"]][[1]] |>
+pk_fractioned_24h = sim_results_fractioned[["fractioned_results"]][[1]] |>
     group_by(DoseGroup, AMT) |>
     summarize( 
       C_CENTRAL_mean = mean(C_CENTRAL),
@@ -220,7 +287,7 @@ fractioned_24h = sim_results_fractioned[["fractioned_results"]][[1]] |>
     ),
 
 # Resume fractioned data at 24h for each AMT
-fractioned_24h_by_AMT = sim_results_fractioned[["fractioned_results"]][[1]] |>
+pk_fractioned_24h_by_AMT = sim_results_fractioned[["fractioned_results"]][[1]] |>
     group_by(AMT) |>
     summarize( 
       C_CENTRAL_mean = mean(C_CENTRAL),
@@ -232,7 +299,7 @@ fractioned_24h_by_AMT = sim_results_fractioned[["fractioned_results"]][[1]] |>
     ),
 
 # Resume all fractioned data over the time for PD & PK
-fractioned_full = sim_results_fractioned[["fractioned_results"]][[1]] |>
+pkpd_fractioned_full = sim_results_fractioned[["fractioned_results"]][[1]] |>
     group_by(DoseGroup, AMT, time) |>
     summarize( 
       Log10CFU_CENTRAL = mean(Log10CFU_CENTRAL),
@@ -242,7 +309,7 @@ fractioned_full = sim_results_fractioned[["fractioned_results"]][[1]] |>
     ),
 
 # Resume all fractioned data over the time for PD & PK
-continuous_full = sim_results_continuous_inf[["continuous_inf_results"]] |>
+pkpd_continuous_full = sim_results_continuous_inf[["continuous_inf_results"]] |>
     group_by(STRN, AMT, time) |>
     summarize( 
       Log10CFU_CENTRAL = mean(Log10CFU_CENTRAL),
@@ -252,194 +319,242 @@ continuous_full = sim_results_continuous_inf[["continuous_inf_results"]] |>
     )
 )
 
-# Resume the percentage of data under a certain log-target
-targets_summary <- list(
+```
+
+Another check about the mean & median of PD Endpoints across AMT for each dosing regimens (DoseGroup). It allow to visualize the difference observe in targets_summary dataset with plasma_by_AMT_and_DG & csf_by_AMT_and_DG
+
+```{r}
+## Plasma
+ggplot(plasma_data[["obs_mean"]] %>%
+         filter(DoseGroup != "continuous_infusion" & DoseGroup != "control")) +
+  stat_summary(mapping = aes(x = AMT, y = deltaLog10CFU, color = factor(DoseGroup, levels = c("fractioned_24h", "fractioned_12h", "fractioned_8h", "fractioned_4h")), group = DoseGroup), 
+               fun = "mean", 
+               geom = "line", 
+               size = 1) +
+  scale_color_manual(name = "Obs mean by DoseGroup", values = c("tomato", "cornflowerblue", "springgreen4", "goldenrod1")) +
+  ggtitle("PD endpoint across dose amounts and stratify by DoseGroup in Plasma")
+  theme_bw()
+
+ggplot(plasma_data[["obs_mean"]] %>%
+         filter(DoseGroup != "continuous_infusion" & DoseGroup != "control")) +
+  stat_summary(mapping = aes(x = AMT, y = deltaLog10CFU, color = factor(DoseGroup, levels = c("fractioned_24h", "fractioned_12h", "fractioned_8h", "fractioned_4h")), group = DoseGroup), 
+               fun = "median", 
+               geom = "line", 
+               size = 1) +
+  scale_color_manual(name = "Obs median by DoseGroup", values = c("tomato", "cornflowerblue", "springgreen4", "goldenrod1")) +
+  ggtitle("PD endpoint across dose amounts and stratify by DoseGroup in Plasma")
+  theme_bw()
   
-  csf_global = csf_data[["obs_mean"]] |>
-  ungroup() |>
-  summarise(
-    Stasis_reach = mean(deltaLog10CFU > 0) * 100,
-    Log1Kill_reach = mean(deltaLog10CFU < -1) * 100,
-    Log2Kill_reach = mean(deltaLog10CFU < -2) * 100
-  ),
+## CSF
+ggplot(csf_data[["obs_mean"]] %>%
+         filter(DoseGroup != "continuous_infusion" & DoseGroup != "control")) +
+  stat_summary(mapping = aes(x = AMT, y = deltaLog10CFU, color = factor(DoseGroup, levels = c("fractioned_24h", "fractioned_12h", "fractioned_8h", "fractioned_4h")), group = DoseGroup), 
+               fun = "mean", 
+               geom = "line", 
+               size = 1) +
+  scale_color_manual(name = "Obs mean by DoseGroup", values = c("tomato", "cornflowerblue", "springgreen4", "goldenrod1")) +
+  ggtitle("PD endpoint across dose amounts and stratify by DoseGroup in CSF")
+  theme_bw()
   
-  csf_by_DoseGroup = csf_data[["obs_mean"]] |>
-  ungroup() |>
-  group_by(DoseGroup) |>
-  summarise(
-    Stasis_reach = mean(deltaLog10CFU < 0) * 100,
-    Log1Kill_reach = mean(deltaLog10CFU < -1) * 100,
-    Log2Kill_reach = mean(deltaLog10CFU < -2) * 100,
-  ) |> filter(DoseGroup != "control"),
+ggplot(csf_data[["obs_mean"]] %>%
+         filter(DoseGroup != "continuous_infusion" & DoseGroup != "control")) +
+  stat_summary(mapping = aes(x = AMT, y = deltaLog10CFU, color = factor(DoseGroup, levels = c("fractioned_24h", "fractioned_12h", "fractioned_8h", "fractioned_4h")), group = DoseGroup), 
+               fun.data = "mean_cl_boot",
+               geom = "ribbon",
+               alpha = 0.2) +
+  stat_summary(mapping = aes(x = AMT, y = deltaLog10CFU, color = factor(DoseGroup, levels = c("fractioned_24h", "fractioned_12h", "fractioned_8h", "fractioned_4h")), group = DoseGroup), 
+               fun = "mean", 
+               geom = "line", 
+               size = 1) +
+  scale_color_manual(name = "Obs mean by DoseGroup", values = c("tomato", "cornflowerblue", "springgreen4", "goldenrod1")) +
+  ggtitle("PD endpoint across dose amounts and stratify by DoseGroup in CSF") +
+  theme_bw()
+
+ggplot(csf_data[["obs_mean"]] %>%
+         filter(DoseGroup != "continuous_infusion" & DoseGroup != "control")) +
+  stat_summary(mapping = aes(x = AMT, y = deltaLog10CFU, color = factor(DoseGroup, levels = c("fractioned_24h", "fractioned_12h", "fractioned_8h", "fractioned_4h")), group = DoseGroup), 
+               fun = "median", 
+               geom = "line", 
+               size = 1) +
+  scale_color_manual(name = "Obs median by DoseGroup", values = c("tomato", "cornflowerblue", "springgreen4", "goldenrod1")) +
+  ggtitle("PD endpoint across dose amounts and stratify by DoseGroup in CSF")
+  theme_bw()
   
-  csf_by_AMT = csf_data[["obs_mean"]] |>
-  ungroup() |>
-  group_by(AMT) |>
-  summarise(
-    Stasis_reach = mean(deltaLog10CFU < 0) * 100,
-    Log1Kill_reach = mean(deltaLog10CFU < -1) * 100,
-    Log2Kill_reach = mean(deltaLog10CFU < -2) * 100,
-  ),
-  
-  plasma_global = plasma_data[["obs_mean"]] |>
-    ungroup() |>
-    summarise(
-      Stasis_reach = mean(deltaLog10CFU < 0) * 100,
-      Log1Kill_reach = mean(deltaLog10CFU < -1) * 100,
-      Log2Kill_reach = mean(deltaLog10CFU < -2) * 100
-    ),
-  
-  plasma_by_DoseGroup = plasma_data[["obs_mean"]] |>
-  ungroup() |>
-  group_by(DoseGroup) |>
-  summarise(
-    Stasis_reach = mean(deltaLog10CFU < 0) * 100,
-    Log1Kill_reach = mean(deltaLog10CFU < -1) * 100,
-    Log2Kill_reach = mean(deltaLog10CFU < -2) * 100
-  ) |> filter(DoseGroup != "control"),
-  
-  plasma_by_AMT = plasma_data[["obs_mean"]] |>
-  ungroup() |>
-  group_by(AMT) |>
-  summarise(
-    Stasis_reach = mean(deltaLog10CFU < 0) * 100,
-    Log1Kill_reach = mean(deltaLog10CFU < -1) * 100,
-    Log2Kill_reach = mean(deltaLog10CFU < -2) * 100
-  )
-)
+```
+
+We will evaluate the percent of errors for different PD targets
+
+```{r}
+source("RScripts/target_errors_estimation.R")
 
 ```
 
-#############################################################################
-###########                      VPC generation                   ###########
-#############################################################################
+## VPC generation
+
 Generate all VPC objects needed for plots.
 
 ```{r}
 source("RScripts/vpc_script.R")
-library(tidyvpc)
 
-# For T>MIC
-vpc_by_DoseGroup_ToverMIC_plasma <- observed(obs_plasma_data |> filter(PKPD_Index == "I3_ToverMIC"), x = Index_value, y = DV) |>
-  simulated(isim_plasma_data, y = IPRED) |>
-  stratify(~ DoseGroup) |>
-  binning(bin = "ntile", nbins = 9) |>
-  vpcstats()
+csf_vpc_data <- list(
+  obs_data = generate_obs_data(csf_data[["sim_data"]]),
+  sim_data = generate_pred_data(csf_data[["correlation_data"]], generate_obs_data(csf_data[["sim_data"]]), 10)
+)
 
-vpc_global_ToverMIC_plasma <- observed(obs_plasma_data |> filter(PKPD_Index == "I3_ToverMIC"), x = Index_value, y = DV) |>
-  simulated(isim_plasma_data, y = IPRED) |>
-  binning(bin = "ntile", nbins = 9) |>
-  vpcstats()
-
-vpc_by_DoseGroup_ToverMIC_csf <- observed(obs_csf_data |> filter(PKPD_Index == "I3_ToverMIC"), x = Index_value, y = DV) |>
-  simulated(isim_plasma_data, y = IPRED) |>
-  stratify(~ DoseGroup) |>
-  binning(bin = "ntile", nbins = 9) |>
-  vpcstats()
-
-vpc_global_ToverMIC_csf <- observed(obs_csf_data |> filter(PKPD_Index == "I3_ToverMIC"), x = Index_value, y = DV) |>
-  simulated(isim_plasma_data, y = IPRED) |>
-  binning(bin = "ntile", nbins = 9) |>
-  vpcstats()
-
-# For AUC
-vpc_by_DoseGroup_AUC_plasma <- observed(obs_plasma_data |> filter(PKPD_Index == "I2_AUC"), x = Index_value, y = DV) |>
-  simulated(isim_plasma_data, y = IPRED) |>
-  stratify(~ DoseGroup) |>
-  binning(bin = "ntile", nbins = 9) |>
-  vpcstats()
-
-vpc_global_AUC_plasma <- observed(obs_plasma_data |> filter(PKPD_Index == "I2_AUC"), x = Index_value, y = DV) |>
-  simulated(isim_plasma_data, y = IPRED) |>
-  binning(bin = "ntile", nbins = 9) |>
-  vpcstats()
-
-vpc_by_DoseGroup_AUC_csf <- observed(obs_csf_data |> filter(PKPD_Index == "I2_AUC"), x = Index_value, y = DV) |>
-  simulated(isim_csf_data, y = IPRED) |>
-  stratify(~ DoseGroup) |>
-  binning(bin = "ntile", nbins = 9) |>
-  vpcstats()
-
-vpc_global_AUC_csf <- observed(obs_csf_data |> filter(PKPD_Index == "I2_AUC"), x = Index_value, y = DV) |>
-  simulated(isim_csf_data, y = IPRED) |>
-  binning(bin = "ntile", nbins = 9) |>
-  vpcstats()
-
-# Cmax
-vpc_by_DoseGroup_Cmax_plasma <- observed(obs_plasma_data |> filter(PKPD_Index == "I1_Cmax"), x = Index_value, y = DV) |>
-  simulated(isim_plasma_data, y = IPRED) |>
-  stratify(~ DoseGroup) |>
-  binning(bin = "ntile", nbins = 9) |>
-  vpcstats()
-
-vpc_global_Cmax_plasma <- observed(obs_plasma_data |> filter(PKPD_Index == "I1_Cmax"), x = Index_value, y = DV) |>
-  simulated(isim_plasma_data, y = IPRED) |>
-  binning(bin = "ntile", nbins = 9) |>
-  vpcstats()
-
-vpc_by_DoseGroup_Cmax_csf <- observed(obs_csf_data |> filter(PKPD_Index == "I1_Cmax"), x = Index_value, y = DV) |>
-  simulated(isim_csf_data, y = IPRED) |>
-  stratify(~ DoseGroup) |>
-  binning(bin = "ntile", nbins = 9) |>
-  vpcstats()
-
-vpc_global_Cmax_csf <- observed(obs_csf_data |> filter(PKPD_Index == "I1_Cmax"), x = Index_value, y = DV) |>
-  simulated(isim_csf_data, y = IPRED) |>
-  binning(bin = "ntile", nbins = 9) |>
-  vpcstats()
+gc()
 ```
 
-Generate all VPC plots. Need to execute the block above.
+Now we will plot AUC VPC for CSF
 
 ```{r}
-## Plotting Plasma
-plot(vpc_by_DoseGroup_ToverMIC_plasma, log = "x", show.points = FALSE) + 
-  scale_x_continuous(limits = c(0, 100), breaks = c(0, 25, 50, 75, 100)) + labs(x = "fT>MIC (%)", y = "deltaLog10CFU (CFU/ml)") + ggtitle("VPC for T>MIC in Plasma by Dose Group")
-ggsave("results/VPC_ToverMIC_plasma_by_DoseGroup.png")
+data_obs <- csf_vpc_data$obs_data |> filter(PKPD_Index == "I2_AUC")
+data_sim <- csf_vpc_data$sim_data |> filter(PKPD_Index == "I2_AUC")
 
-plot(vpc_global_ToverMIC_plasma, log = "x", show.points = FALSE) + 
-  scale_x_continuous(limits = c(0, 100), breaks = c(0, 25, 50, 75, 100)) + labs(x = "fT>MIC (%)", y = "deltaLog10CFU (CFU/ml)") + ggtitle("VPC for T>MIC in Plasma")
-ggsave("results/VPC_ToverMIC_plasma.png")
+auc_obs <- data_obs |>
+    mutate(bin = ntile(value, 20)) |>
+    group_by(bin) |>
+    summarize(
+      x_mean = mean(value),
+      p5 = quantile(deltaLog10CFU, 0.05),
+      p50 = quantile(deltaLog10CFU, 0.5),
+      p95 = quantile(deltaLog10CFU, 0.95)
+    )
 
-plot(vpc_by_DoseGroup_AUC_plasma, log = "x", show.points = FALSE) + 
-  scale_x_continuous(limits = c(1, 1000), breaks = c(1, 10, 100, 1000), trans="log10") + labs(x = "fAUC/MIC", y = "deltaLog10CFU (CFU/ml)") + ggtitle("VPC for AUC in Plasma by Dose Group")
-ggsave("results/VPC_AUC_plasma_by_DoseGroup.png")
+auc_sim <- data_sim |>
+    mutate(bin = ntile(value, 20)) |>
+    group_by(bin) |>
+    summarize(
+      x_mean = mean(value),
+      p5 = quantile(IPRED, 0.05),
+      p50 = quantile(IPRED, 0.5),
+      p95 = quantile(IPRED, 0.95)
+    )
 
-plot(vpc_global_AUC_plasma, log = "x", show.points = FALSE) + 
-  scale_x_continuous(limits = c(1, 1000), breaks = c(1, 10, 100, 1000), trans="log10") + labs(x = "fAUC/MIC", y = "deltaLog10CFU (CFU/ml)") + ggtitle("VPC for AUC in Plasma")
-ggsave("results/VPC_AUC_plasma.png")
+ggplot() +
+      geom_smooth(data = auc_obs, aes(x = x_mean, y = p5), 
+                  method = "gam", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
+      geom_smooth(data = auc_obs, aes(x = x_mean, y = p50), 
+                  method = "gam", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
+      geom_smooth(data = auc_obs, aes(x = x_mean, y = p95), 
+                  method = "gam", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
+      geom_smooth(data = auc_sim, aes(x = x_mean, y = p5), 
+                  method = "gam", color = "blue", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+      geom_smooth(data = auc_sim, aes(x = x_mean, y = p50), 
+                  method = "gam", color = "red", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+      geom_smooth(data = auc_sim, aes(x = x_mean, y = p95), 
+                  method = "gam", color = "blue", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+      scale_x_continuous(
+        limits = c(1, 1000),
+        breaks = c(1, 10, 100, 1000),
+        trans = "log10"
+      ) +
+      labs(x = "fAUC/MIC", y = "DeltaLog10CFU (CFU/ml)") +
+      ggtitle("VPC for fAUC/MIC in CSF") +
+      theme_classic()
 
-plot(vpc_by_DoseGroup_Cmax_plasma, log = "x", show.points = FALSE) + 
-  scale_x_continuous(limits = c(0.1, 100), breaks = c(0.1, 1, 10, 100), trans="log10") + labs(x = "fCmax/MIC (mg/l)", y = "deltaLog10CFU (CFU/ml)") + ggtitle("VPC for Cmax in Plasma by Dose Group")
-ggsave("results/VPC_Cmax_plasma_by_DoseGroup.png")
-
-plot(vpc_global_Cmax_plasma, log = "x", show.points = FALSE) + 
-  scale_x_continuous(limits = c(0.1, 100), breaks = c(0.1, 1, 10, 100), trans="log10") + labs(x = "fCmax/MIC (mg/l)", y = "deltaLog10CFU (CFU/ml)") + ggtitle("VPC for Cmax in Plasma")
-ggsave("results/VPC_Cmax_plasma.png")
-
-## Plotting CSF
-plot(vpc_by_DoseGroup_ToverMIC_csf, log = "x", show.points = FALSE) + scale_x_continuous(limits = c(0, 100), breaks = c(0, 25, 50, 75, 100)) + labs(x = "fT>MIC (%)", y = "deltaLog10CFU (CFU/ml)") + ggtitle("VPC for T>MIC in CSF by Dose Group")
-ggsave("results/VPC_ToverMIC_csf_by_DoseGroup.png")
-
-plot(vpc_global_ToverMIC_csf, log = "x", show.points = FALSE) + scale_x_continuous(limits = c(0, 100), breaks = c(0, 25, 50, 75, 100)) + labs(x = "fT>MIC (%)", y = "deltaLog10CFU (CFU/ml)") + ggtitle("VPC for T>MIC in CSF")
-ggsave("results/VPC_ToverMIC_csf.png")
-
-plot(vpc_by_DoseGroup_AUC_csf, log = "x", show.points = FALSE) + scale_x_continuous(limits = c(1, 1000), breaks = c(1, 10, 100, 1000), trans="log10") + labs(x = "fAUC/MIC", y = "deltaLog10CFU (CFU/ml)") + ggtitle("VPC for AUC in CSF by Dose Group")
-
-ggsave("results/VPC_AUC_csf_by_DoseGroup.png")
-plot(vpc_global_AUC_csf, log = "x", show.points = FALSE) + scale_x_continuous(limits = c(1, 1000), breaks = c(1, 10, 100, 1000), trans="log10") + labs(x = "fAUC/MIC", y = "deltaLog10CFU (CFU/ml)") + ggtitle("VPC for AUC in CSF")
-ggsave("results/VPC_AUC_csf.png")
-
-plot(vpc_by_DoseGroup_Cmax_csf, log = "x", show.points = FALSE) + scale_x_continuous(limits = c(0.1, 50), breaks = c(0.1, 1, 10, 50), trans="log10") + labs(x = "fCmax/MIC (mg/l)", y = "deltaLog10CFU (CFU/ml)") + ggtitle("VPC for Cmax in CSF by Dose Group")
-ggsave("results/VPC_Cmax_csf_by_DoseGroup.png")
-
-plot(vpc_global_Cmax_csf, log = "x", show.points = FALSE) + scale_x_continuous(limits = c(0.1, 50), breaks = c(0.1, 1, 10, 50), trans="log10") + labs(x = "fCmax/MIC (mg/l)", y = "deltaLog10CFU (CFU/ml)") + ggtitle("VPC for Cmax in CSF")
-ggsave("results/VPC_Cmax_csf.png")
 ```
 
-#############################################################################
-###########                  Stratification plots                ###########
-#############################################################################
+Then VPCs for Cmax in CSF
+
+```{r}
+data_obs <- csf_vpc_data$obs_data |> filter(PKPD_Index == "I1_Cmax")
+data_sim <- csf_vpc_data$sim_data |> filter(PKPD_Index == "I1_Cmax")
+
+cmax_obs <- data_obs |>
+    mutate(bin = ntile(value, 20)) |>
+    group_by(bin) |>
+    summarize(
+      x_mean = mean(value),
+      p5 = quantile(deltaLog10CFU, 0.05),
+      p50 = quantile(deltaLog10CFU, 0.5),
+      p95 = quantile(deltaLog10CFU, 0.95)
+    )
+
+cmax_sim <- data_sim |>
+    mutate(bin = ntile(value, 20)) |>
+    group_by(bin) |>
+    summarize(
+      x_mean = mean(value),
+      p5 = quantile(IPRED, 0.05),
+      p50 = quantile(IPRED, 0.5),
+      p95 = quantile(IPRED, 0.95)
+    )
+
+ggplot() +
+      geom_smooth(data = cmax_obs, aes(x = x_mean, y = p5), 
+                  method = "gam", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
+      geom_smooth(data = cmax_obs, aes(x = x_mean, y = p50), 
+                  method = "gam", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
+      geom_smooth(data = cmax_obs, aes(x = x_mean, y = p95), 
+                  method = "gam", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
+      geom_smooth(data = cmax_sim, aes(x = x_mean, y = p5), 
+                  method = "gam", color = "blue", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+      geom_smooth(data = cmax_sim, aes(x = x_mean, y = p50), 
+                  method = "gam", color = "red", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+      geom_smooth(data = cmax_sim, aes(x = x_mean, y = p95), 
+                  method = "gam", color = "blue", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+      scale_x_continuous(
+        limits = c(0.1, 100),
+        breaks = c(0.1, 1, 10, 100),
+        trans = "log10"
+      ) +
+      labs(x = "fCmax/MIC (mg/l)", y = "DeltaLog10CFU (CFU/ml)") +
+      ggtitle("VPC for fCmax/MIC in CSF") +
+      theme_classic()
+
+```
+
+And finally, T\>MIC VPCs in CSF
+
+```{r}
+data_obs <- csf_vpc_data$obs_data |> filter(PKPD_Index == "I3_ToverMIC")
+data_sim <- csf_vpc_data$sim_data |> filter(PKPD_Index == "I3_ToverMIC")
+
+tmic_obs <- data_obs |>
+    mutate(bin = ntile(value, 20)) |>
+    group_by(bin) |>
+    summarize(
+      x_mean = mean(value),
+      p5 = quantile(deltaLog10CFU, 0.05),
+      p50 = quantile(deltaLog10CFU, 0.5),
+      p95 = quantile(deltaLog10CFU, 0.95)
+    )
+
+tmic_sim <- data_sim |>
+    mutate(bin = ntile(value, 20)) |>
+    group_by(bin) |>
+    summarize(
+      x_mean = mean(value),
+      p5 = quantile(IPRED, 0.05),
+      p50 = quantile(IPRED, 0.5),
+      p95 = quantile(IPRED, 0.95)
+    )
+
+ggplot() +
+      geom_smooth(data = tmic_obs, aes(x = x_mean, y = p5), 
+                  method = "gam", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
+      geom_smooth(data = tmic_obs, aes(x = x_mean, y = p50), 
+                  method = "gam", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
+      geom_smooth(data = tmic_obs, aes(x = x_mean, y = p95), 
+                  method = "gam", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
+      geom_smooth(data = tmic_sim, aes(x = x_mean, y = p5), 
+                  method = "gam", color = "blue", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+      geom_smooth(data = tmic_sim, aes(x = x_mean, y = p50), 
+                  method = "gam", color = "red", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+      geom_smooth(data = tmic_sim, aes(x = x_mean, y = p95), 
+                  method = "gam", color = "blue", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+      scale_x_continuous(
+        limits = c(0, 100),
+        breaks = c(0, 25, 50, 75, 100)
+      ) + # labels x and y
+      labs(x = "T>MIC (%)", y = "DeltaLog10CFU (CFU/ml)") +
+      ggtitle("VPC for T>MIC in CSF") +
+      theme_classic()
+
+```
+
+## Stratification plots
+
 ```{r}
 ggplot(filter(csf_data[["obs_mean"]], PKPD_Index == "I2_AUC"))  +
       geom_point(mapping = aes(
@@ -549,9 +664,7 @@ ggplot(filter(csf_data[["obs_mean"]], PKPD_Index == "I5_ToverMIC_10X", AMT >= 12
   theme_bw()
 ```
 
-#############################################################################
-###########                       PK Plots                        ###########
-#############################################################################
+## PK Plots
 
 ```{r}
 # Plasma plot of LNZ conc across time by AMT with Continuous infusions
@@ -666,9 +779,7 @@ ggsave("results/csf_pk_by_DoseGroup_free_y.png", width = 8.27, height = 11.69, u
 
 ```
 
-#############################################################################
-###########                       PD Plots                        ###########
-#############################################################################
+## PD Plots
 
 ```{r}
 summary_full |>

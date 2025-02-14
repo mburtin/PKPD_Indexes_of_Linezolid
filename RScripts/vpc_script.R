@@ -3,19 +3,16 @@ generate_obs_data <- function(data) {
   x <- data |>
     ungroup() |>
     filter(DoseGroup != "control") |>
-    select(-c(Log10CFU, Rsq, Adj.Rsq, B0, time)) |>
-    rename(REP = ID,
-           DV = deltaLog10CFU,
-           Index_value = value) |>
-    group_by(DoseGroup, AMT) |>
-    mutate(ID = cur_group_id()) |>
-    ungroup() |>
-    select(STRN, MIC, ID, REP, DoseGroup, AMT, PKPD_Index, Index_value, DV)
+    select(STRN, DoseGroup, AMT, ID, PKPD_Index, value, deltaLog10CFU)
+  
+  if (any(is.na(x))) {
+    stop("NA values in obs_data")
+  }
   
   return(x)
 }
 
-generate_pred_data <- function(data) {
+generate_pred_data <- function(data, obs_data, n_sim) {
   x <- data |> 
     mutate(PKPD_Index = case_when(
       PKPD_Index %in% c("CENTRAL_Cmax", "CSF_Cmax") ~ "I1_Cmax",
@@ -28,48 +25,16 @@ generate_pred_data <- function(data) {
     select(-c(data, nls, I0_RSE, Imax_RSE, IC50_RSE, H_RSE, Rsq, Adj.Rsq, Target_stasis, Target_1LogKill, Target_2LogKill)) |>
     ungroup()
   
+   x <- x |> left_join(obs_data, by = c("PKPD_Index")) |>
+     slice(rep(1:n(), each = n_sim)) |>
+     mutate(REP = rep(1:n_sim, length.out = n()),
+            PRED  = Imax_model(value, I0, Imax, IC50, H),
+            IPRED = Imax_model(value, I0, Imax, IC50, H) + rnorm(n(), mean = 0, sd = Sd_Residuals)) |>
+     select(STRN, DoseGroup, AMT, ID, PKPD_Index, REP, value, deltaLog10CFU, PRED, IPRED, I0, Imax, IC50, H, Sd_Residuals)
+   
+   if (any(is.na(x))) {
+     stop("NA values in sim_data")
+   }
+   
   return(x)
-}
-
-# Obsbs generate df
-obs_plasma_data <- generate_obs_data(plasma_data[["sim_data"]])
-obs_csf_data <- generate_obs_data(csf_data[["sim_data"]])
-
-if(any(is.na(obs_plasma_data))) {
-  stop("NA values in obs_plasma_data")
-} else if (any(is.na(obs_csf_data))) {
-  stop("NA values in obs_csf_data")
-} else {
-  message("Obs data generated successfully")
-}
-
-# Plasma sim generation df
-isim_plasma_data <- generate_pred_data(plasma_data[["correlation_data"]])
-
-isim_plasma_data <- left_join(obs_plasma_data, isim_plasma_data, by = "PKPD_Index") |>
-  group_by(STRN, ID, REP, DoseGroup, PKPD_Index) |>
-  mutate(PRED  = Imax_model(Index_value, I0, Imax, IC50, H),
-         IPRED = Imax_model(Index_value, I0, Imax, IC50, H) + sample(Residuals[[1]] |> pull(), size = 1, replace = TRUE)) |>
-  select(-c(Residuals))
-
-if(any(is.na(isim_plasma_data))) {
-  stop("NA values in isim_plasma_data")
-} else {
-  message("Plasma sim data generated successfully")
-}
-
-# CSF sim generation df
-isim_csf_data <- generate_pred_data(csf_data[["correlation_data"]])
-
-isim_csf_data <- isim_csf_data |>
-  left_join(obs_csf_data, isim_csf_data, by = "PKPD_Index") |>
-  group_by(STRN, ID, REP, DoseGroup, PKPD_Index) |>
-  mutate(PRED  = Imax_model(Index_value, I0, Imax, IC50, H),
-         IPRED = Imax_model(Index_value, I0, Imax, IC50, H) + sample(Residuals[[1]] |> pull(), size = 1, replace = TRUE)) |>
-  select(-c(Residuals))
-
-if(any(is.na(isim_csf_data))) {
-  stop("NA values in isim_csf_data")
-} else {
-  message("CSF sim data generated successfully")
 }
