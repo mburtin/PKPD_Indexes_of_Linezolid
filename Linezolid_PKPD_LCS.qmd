@@ -398,12 +398,34 @@ source("RScripts/vpc_script.R")
 
 csf_vpc_data <- list(
   obs_data = generate_obs_data(csf_data[["sim_data"]]),
-  sim_data = generate_pred_data(csf_data[["correlation_data"]], generate_obs_data(csf_data[["sim_data"]]), 10)
+  cmax_sim = generate_pred_data(sim_data = csf_data[["correlation_data"]], 
+                                obs_data = generate_obs_data(csf_data[["sim_data"]]),
+                                pkpd_index = "I1_Cmax",
+                                n_sim = 100),
+  auc_sim = generate_pred_data(sim_data = csf_data[["correlation_data"]], 
+                                obs_data = generate_obs_data(csf_data[["sim_data"]]),
+                                pkpd_index = "I2_AUC",
+                                n_sim = 100),
+  tmic_sim = generate_pred_data(sim_data = csf_data[["correlation_data"]], 
+                                obs_data = generate_obs_data(csf_data[["sim_data"]]),
+                                pkpd_index = "I3_ToverMIC",
+                                n_sim = 100)
 )
 
 csf_vpc_with_plasma_index_data <- list(
   obs_data = generate_obs_data(csf_with_plasma_index_data[["sim_data"]]),
-  sim_data = generate_pred_data(csf_with_plasma_index_data[["correlation_data"]], generate_obs_data(csf_with_plasma_index_data[["sim_data"]]), 10)
+  cmax_sim = generate_pred_data(sim_data = csf_with_plasma_index_data[["correlation_data"]], 
+                                obs_data = generate_obs_data(csf_with_plasma_index_data[["sim_data"]]),
+                                pkpd_index = "I1_Cmax",
+                                n_sim = 100),
+  auc_sim = generate_pred_data(sim_data = csf_with_plasma_index_data[["correlation_data"]], 
+                                obs_data = generate_obs_data(csf_with_plasma_index_data[["sim_data"]]),
+                                pkpd_index = "I2_AUC",
+                                n_sim = 100),
+  tmic_sim = generate_pred_data(sim_data = csf_with_plasma_index_data[["correlation_data"]], 
+                                obs_data = generate_obs_data(csf_with_plasma_index_data[["sim_data"]]),
+                                pkpd_index = "I3_ToverMIC",
+                                n_sim = 100)
 )
 
 gc()
@@ -412,10 +434,8 @@ gc()
 Now we will plot AUC VPC for CSF
 
 ```{r}
-data_obs <- csf_vpc_data$obs_data |> filter(PKPD_Index == "I2_AUC")
-data_sim <- csf_vpc_data$sim_data |> filter(PKPD_Index == "I2_AUC")
-
-auc_obs <- data_obs |>
+auc_obs <- csf_vpc_data$obs_data |> 
+    filter(PKPD_Index == "I2_AUC") |>
     mutate(bin = ntile(value, 20)) |>
     group_by(bin) |>
     summarize(
@@ -425,7 +445,7 @@ auc_obs <- data_obs |>
       p95 = quantile(deltaLog10CFU, 0.95)
     )
 
-auc_sim <- data_sim |>
+auc_sim <- csf_vpc_data$auc_sim |>
     group_by(REP) |>
     mutate(bin = ntile(value, 20)) |>
     group_by(REP, bin) |>
@@ -463,10 +483,8 @@ ggplot() +
 Then VPCs for Cmax in CSF
 
 ```{r}
-data_obs <- csf_vpc_data$obs_data |> filter(PKPD_Index == "I1_Cmax")
-data_sim <- csf_vpc_data$sim_data |> filter(PKPD_Index == "I1_Cmax")
-
-cmax_obs <- data_obs |>
+cmax_obs <- csf_vpc_data$obs_data |>
+    filter(PKPD_Index == "I1_Cmax") |>
     mutate(bin = ntile(value, 20)) |>
     group_by(bin) |>
     summarize(
@@ -476,7 +494,7 @@ cmax_obs <- data_obs |>
       p95 = quantile(deltaLog10CFU, 0.95)
     )
 
-cmax_sim <- data_sim |>
+cmax_sim <- csf_vpc_data$cmax_sim |>
     group_by(REP) |>
     mutate(bin = ntile(value, 20)) |>
     group_by(REP, bin) |>
@@ -514,10 +532,8 @@ ggplot() +
 And finaly, T\>MIC VPCs in CSF
 
 ```{r}
-data_obs <- csf_vpc_data$obs_data |> filter(PKPD_Index == "I3_ToverMIC")
-data_sim <- csf_vpc_data$sim_data |> filter(PKPD_Index == "I3_ToverMIC")
-
-tmic_obs <- data_obs |>
+tmic_obs <- csf_vpc_data$obs_data |>
+    filter(PKPD_Index == "I3_ToverMIC") |>
     mutate(bin = ntile(value, 20)) |>
     group_by(bin) |>
     summarize(
@@ -527,7 +543,7 @@ tmic_obs <- data_obs |>
       p95 = quantile(deltaLog10CFU, 0.95)
     )
 
-tmic_sim <- data_sim |>
+tmic_sim <- csf_vpc_data$tmic_sim |>
     group_by(REP) |>
     mutate(bin = ntile(value, 20)) |>
     group_by(REP, bin) |>
