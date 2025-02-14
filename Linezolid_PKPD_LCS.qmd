@@ -481,9 +481,13 @@ ggplot() +
         breaks = c(1, 10, 100, 1000),
         trans = "log10"
       ) +
+      scale_y_continuous(
+        limits = c(-5, 6),
+        breaks = c(5, 2.5, 0, -2.5, -5),
+      ) +
       labs(x = "fAUC/MIC", y = "DeltaLog10CFU (CFU/ml)") +
       ggtitle("VPC for fAUC/MIC in CSF") +
-      theme_classic()
+      theme_minimal()
 
 ```
 
@@ -537,9 +541,13 @@ ggplot() +
         breaks = c(0.1, 1, 10, 100),
         trans = "log10"
       ) +
+      scale_y_continuous(
+        limits = c(-5, 6),
+        breaks = c(5, 2.5, 0, -2.5, -5),
+      ) +
       labs(x = "fCmax/MIC (mg/l)", y = "DeltaLog10CFU (CFU/ml)") +
       ggtitle("VPC for fCmax/MIC in CSF") +
-      theme_classic()
+      theme_minimal()
 
 ```
 
@@ -591,10 +599,14 @@ ggplot() +
       scale_x_continuous(
         limits = c(0, 100),
         breaks = c(0, 25, 50, 75, 100)
-      ) + # labels x and y
+      ) +
+      scale_y_continuous(
+        limits = c(-5, 6),
+        breaks = c(5, 2.5, 0, -2.5, -5),
+      ) +
       labs(x = "T>MIC (%)", y = "DeltaLog10CFU (CFU/ml)") +
       ggtitle("VPC for T>MIC in CSF") +
-      theme_classic()
+      theme_minimal()
 
 ```
 
