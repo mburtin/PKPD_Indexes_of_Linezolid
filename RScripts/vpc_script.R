@@ -30,7 +30,7 @@ generate_pred_data <- function(data, obs_data, n_sim) {
      mutate(REP = rep(1:n_sim, length.out = n()),
             PRED  = Imax_model(value, I0, Imax, IC50, H),
             IPRED = Imax_model(value, I0, Imax, IC50, H) + rnorm(n(), mean = 0, sd = Sd_Residuals)) |>
-     select(STRN, DoseGroup, AMT, ID, PKPD_Index, REP, value, deltaLog10CFU, PRED, IPRED, I0, Imax, IC50, H, Sd_Residuals)
+     select(STRN, DoseGroup, AMT, ID, PKPD_Index, REP, value, deltaLog10CFU, PRED, IPRED)
    
    if (any(is.na(x))) {
      stop("NA values in sim_data")

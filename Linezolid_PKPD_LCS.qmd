@@ -401,6 +401,11 @@ csf_vpc_data <- list(
   sim_data = generate_pred_data(csf_data[["correlation_data"]], generate_obs_data(csf_data[["sim_data"]]), 10)
 )
 
+csf_vpc_with_plasma_index_data <- list(
+  obs_data = generate_obs_data(csf_with_plasma_index_data[["sim_data"]]),
+  sim_data = generate_pred_data(csf_with_plasma_index_data[["correlation_data"]], generate_obs_data(csf_with_plasma_index_data[["sim_data"]]), 10)
+)
+
 gc()
 ```
 
@@ -421,8 +426,9 @@ auc_obs <- data_obs |>
     )
 
 auc_sim <- data_sim |>
+    group_by(REP) |>
     mutate(bin = ntile(value, 20)) |>
-    group_by(bin) |>
+    group_by(REP, bin) |>
     summarize(
       x_mean = mean(value),
       p5 = quantile(IPRED, 0.05),
@@ -432,17 +438,17 @@ auc_sim <- data_sim |>
 
 ggplot() +
       geom_smooth(data = auc_obs, aes(x = x_mean, y = p5), 
-                  method = "gam", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
+                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
       geom_smooth(data = auc_obs, aes(x = x_mean, y = p50), 
-                  method = "gam", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
+                  method = "loess", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
       geom_smooth(data = auc_obs, aes(x = x_mean, y = p95), 
-                  method = "gam", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
+                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
       geom_smooth(data = auc_sim, aes(x = x_mean, y = p5), 
-                  method = "gam", color = "blue", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
       geom_smooth(data = auc_sim, aes(x = x_mean, y = p50), 
-                  method = "gam", color = "red", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+                  method = "loess", color = "red", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
       geom_smooth(data = auc_sim, aes(x = x_mean, y = p95), 
-                  method = "gam", color = "blue", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
       scale_x_continuous(
         limits = c(1, 1000),
         breaks = c(1, 10, 100, 1000),
@@ -471,8 +477,9 @@ cmax_obs <- data_obs |>
     )
 
 cmax_sim <- data_sim |>
+    group_by(REP) |>
     mutate(bin = ntile(value, 20)) |>
-    group_by(bin) |>
+    group_by(REP, bin) |>
     summarize(
       x_mean = mean(value),
       p5 = quantile(IPRED, 0.05),
@@ -482,17 +489,17 @@ cmax_sim <- data_sim |>
 
 ggplot() +
       geom_smooth(data = cmax_obs, aes(x = x_mean, y = p5), 
-                  method = "gam", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
+                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
       geom_smooth(data = cmax_obs, aes(x = x_mean, y = p50), 
-                  method = "gam", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
+                  method = "loess", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
       geom_smooth(data = cmax_obs, aes(x = x_mean, y = p95), 
-                  method = "gam", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
+                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
       geom_smooth(data = cmax_sim, aes(x = x_mean, y = p5), 
-                  method = "gam", color = "blue", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
       geom_smooth(data = cmax_sim, aes(x = x_mean, y = p50), 
-                  method = "gam", color = "red", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+                  method = "loess", color = "red", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
       geom_smooth(data = cmax_sim, aes(x = x_mean, y = p95), 
-                  method = "gam", color = "blue", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
       scale_x_continuous(
         limits = c(0.1, 100),
         breaks = c(0.1, 1, 10, 100),
@@ -521,8 +528,9 @@ tmic_obs <- data_obs |>
     )
 
 tmic_sim <- data_sim |>
+    group_by(REP) |>
     mutate(bin = ntile(value, 20)) |>
-    group_by(bin) |>
+    group_by(REP, bin) |>
     summarize(
       x_mean = mean(value),
       p5 = quantile(IPRED, 0.05),
@@ -532,17 +540,17 @@ tmic_sim <- data_sim |>
 
 ggplot() +
       geom_smooth(data = tmic_obs, aes(x = x_mean, y = p5), 
-                  method = "gam", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
+                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
       geom_smooth(data = tmic_obs, aes(x = x_mean, y = p50), 
-                  method = "gam", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
+                  method = "loess", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
       geom_smooth(data = tmic_obs, aes(x = x_mean, y = p95), 
-                  method = "gam", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
+                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
       geom_smooth(data = tmic_sim, aes(x = x_mean, y = p5), 
-                  method = "gam", color = "blue", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
       geom_smooth(data = tmic_sim, aes(x = x_mean, y = p50), 
-                  method = "gam", color = "red", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+                  method = "loess", color = "red", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
       geom_smooth(data = tmic_sim, aes(x = x_mean, y = p95), 
-                  method = "gam", color = "blue", linetype = "solid", size = 0.6, se = FALSE, span = 1) +
+                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
       scale_x_continuous(
         limits = c(0, 100),
         breaks = c(0, 25, 50, 75, 100)
