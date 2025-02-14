@@ -454,6 +454,13 @@ auc_sim <- csf_vpc_data$auc_sim |>
       p5 = quantile(IPRED, 0.05),
       p50 = quantile(IPRED, 0.5),
       p95 = quantile(IPRED, 0.95)
+    ) |>
+    pivot_longer(cols = c(p5, p50, p95), names_to = "percentile", values_to = "value") |>
+    group_by(percentile, bin, x_mean) |>
+    summarize(
+      ic_05 = quantile(value, 0.05),
+      ic_50 = quantile(value, 0.5),
+      ic_95 = quantile(value, 0.95)
     )
 
 ggplot() +
@@ -463,11 +470,11 @@ ggplot() +
                   method = "loess", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
       geom_smooth(data = auc_obs, aes(x = x_mean, y = p95), 
                   method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
-      geom_smooth(data = auc_sim, aes(x = x_mean, y = p5), 
+      geom_smooth(data = auc_sim |> filter(percentile == "p5"), aes(x = x_mean, y = ic_50), 
                   method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      geom_smooth(data = auc_sim, aes(x = x_mean, y = p50), 
+      geom_smooth(data = auc_sim |> filter(percentile == "p50"), aes(x = x_mean, y = ic_50), 
                   method = "loess", color = "red", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      geom_smooth(data = auc_sim, aes(x = x_mean, y = p95), 
+      geom_smooth(data = auc_sim |> filter(percentile == "p95"), aes(x = x_mean, y = ic_50), 
                   method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
       scale_x_continuous(
         limits = c(1, 1000),
@@ -503,6 +510,13 @@ cmax_sim <- csf_vpc_data$cmax_sim |>
       p5 = quantile(IPRED, 0.05),
       p50 = quantile(IPRED, 0.5),
       p95 = quantile(IPRED, 0.95)
+    ) |>
+    pivot_longer(cols = c(p5, p50, p95), names_to = "percentile", values_to = "value") |>
+    group_by(percentile, bin, x_mean) |>
+    summarize(
+      ic_05 = quantile(value, 0.05),
+      ic_50 = quantile(value, 0.5),
+      ic_95 = quantile(value, 0.95)
     )
 
 ggplot() +
@@ -512,11 +526,11 @@ ggplot() +
                   method = "loess", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
       geom_smooth(data = cmax_obs, aes(x = x_mean, y = p95), 
                   method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
-      geom_smooth(data = cmax_sim, aes(x = x_mean, y = p5), 
+      geom_smooth(data = cmax_sim |> filter(percentile == "p5"), aes(x = x_mean, y = ic_50), 
                   method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      geom_smooth(data = cmax_sim, aes(x = x_mean, y = p50), 
+      geom_smooth(data = cmax_sim |> filter(percentile == "p50"), aes(x = x_mean, y = ic_50), 
                   method = "loess", color = "red", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      geom_smooth(data = cmax_sim, aes(x = x_mean, y = p95), 
+      geom_smooth(data = cmax_sim |> filter(percentile == "p95"), aes(x = x_mean, y = ic_50), 
                   method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
       scale_x_continuous(
         limits = c(0.1, 100),
@@ -552,6 +566,13 @@ tmic_sim <- csf_vpc_data$tmic_sim |>
       p5 = quantile(IPRED, 0.05),
       p50 = quantile(IPRED, 0.5),
       p95 = quantile(IPRED, 0.95)
+    ) |>
+    pivot_longer(cols = c(p5, p50, p95), names_to = "percentile", values_to = "value") |>
+    group_by(percentile, bin, x_mean) |>
+    summarize(
+      ic_05 = quantile(value, 0.05),
+      ic_50 = quantile(value, 0.5),
+      ic_95 = quantile(value, 0.95)
     )
 
 ggplot() +
@@ -561,11 +582,11 @@ ggplot() +
                   method = "loess", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
       geom_smooth(data = tmic_obs, aes(x = x_mean, y = p95), 
                   method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
-      geom_smooth(data = tmic_sim, aes(x = x_mean, y = p5), 
+      geom_smooth(data = tmic_sim |> filter(percentile == "p5"), aes(x = x_mean, y = ic_50), 
                   method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      geom_smooth(data = tmic_sim, aes(x = x_mean, y = p50), 
+      geom_smooth(data = tmic_sim |> filter(percentile == "p50"), aes(x = x_mean, y = ic_50), 
                   method = "loess", color = "red", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      geom_smooth(data = tmic_sim, aes(x = x_mean, y = p95), 
+      geom_smooth(data = tmic_sim |> filter(percentile == "p95"), aes(x = x_mean, y = ic_50), 
                   method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
       scale_x_continuous(
         limits = c(0, 100),
