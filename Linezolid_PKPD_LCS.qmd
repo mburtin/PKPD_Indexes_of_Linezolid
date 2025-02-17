@@ -567,7 +567,7 @@ tmic_obs <- csf_vpc_data$obs_data |>
 
 tmic_sim <- csf_vpc_data$tmic_sim |>
     group_by(REP) |>
-    mutate(bin = ntile(value, 20)) |>
+    mutate(bin = cut(value, breaks = seq(0, 100, by = 20), right = FALSE)) |>
     group_by(REP, bin) |>
     summarize(
       x_mean = mean(value),
