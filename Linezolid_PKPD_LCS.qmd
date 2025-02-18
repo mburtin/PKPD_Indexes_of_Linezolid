@@ -431,67 +431,7 @@ csf_vpc_with_plasma_index_data <- list(
 gc()
 ```
 
-Now we will plot AUC VPC for CSF
-
-```{r}
-auc_obs <- csf_vpc_data$obs_data |> 
-    filter(PKPD_Index == "I2_AUC") |>
-    mutate(bin = ntile(value, 20)) |>
-    group_by(bin) |>
-    summarize(
-      x_mean = mean(value),
-      p5 = quantile(deltaLog10CFU, 0.05),
-      p50 = quantile(deltaLog10CFU, 0.5),
-      p95 = quantile(deltaLog10CFU, 0.95)
-    )
-
-auc_sim <- csf_vpc_data$auc_sim |>
-    group_by(REP) |>
-    mutate(bin = ntile(value, 20)) |>
-    group_by(REP, bin) |>
-    summarize(
-      x_mean = mean(value),
-      p5 = quantile(IPRED, 0.05),
-      p50 = quantile(IPRED, 0.5),
-      p95 = quantile(IPRED, 0.95)
-    ) |>
-    pivot_longer(cols = c(p5, p50, p95), names_to = "percentile", values_to = "value") |>
-    group_by(percentile, bin, x_mean) |>
-    summarize(
-      ic_05 = quantile(value, 0.05),
-      ic_50 = quantile(value, 0.5),
-      ic_95 = quantile(value, 0.95)
-    )
-
-ggplot() +
-      geom_smooth(data = auc_obs, aes(x = x_mean, y = p5), 
-                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
-      geom_smooth(data = auc_obs, aes(x = x_mean, y = p50), 
-                  method = "loess", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
-      geom_smooth(data = auc_obs, aes(x = x_mean, y = p95), 
-                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
-      geom_smooth(data = auc_sim |> filter(percentile == "p5"), aes(x = x_mean, y = ic_50), 
-                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      geom_smooth(data = auc_sim |> filter(percentile == "p50"), aes(x = x_mean, y = ic_50), 
-                  method = "loess", color = "red", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      geom_smooth(data = auc_sim |> filter(percentile == "p95"), aes(x = x_mean, y = ic_50), 
-                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      scale_x_continuous(
-        limits = c(1, 1000),
-        breaks = c(1, 10, 100, 1000),
-        trans = "log10"
-      ) +
-      scale_y_continuous(
-        limits = c(-5, 6),
-        breaks = c(5, 2.5, 0, -2.5, -5),
-      ) +
-      labs(x = "fAUC/MIC", y = "DeltaLog10CFU (CFU/ml)") +
-      ggtitle("VPC for fAUC/MIC in CSF") +
-      theme_minimal()
-
-```
-
-Then VPCs for Cmax in CSF
+Generate the binning data
 
 ```{r}
 cmax_obs <- csf_vpc_data$obs_data |>
@@ -523,37 +463,35 @@ cmax_sim <- csf_vpc_data$cmax_sim |>
       ic_95 = quantile(value, 0.95)
     )
 
-ggplot() +
-      geom_smooth(data = cmax_obs, aes(x = x_mean, y = p5), 
-                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
-      geom_smooth(data = cmax_obs, aes(x = x_mean, y = p50), 
-                  method = "loess", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
-      geom_smooth(data = cmax_obs, aes(x = x_mean, y = p95), 
-                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
-      geom_smooth(data = cmax_sim |> filter(percentile == "p5"), aes(x = x_mean, y = ic_50), 
-                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      geom_smooth(data = cmax_sim |> filter(percentile == "p50"), aes(x = x_mean, y = ic_50), 
-                  method = "loess", color = "red", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      geom_smooth(data = cmax_sim |> filter(percentile == "p95"), aes(x = x_mean, y = ic_50), 
-                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      scale_x_continuous(
-        limits = c(0.1, 100),
-        breaks = c(0.1, 1, 10, 100),
-        trans = "log10"
-      ) +
-      scale_y_continuous(
-        limits = c(-5, 6),
-        breaks = c(5, 2.5, 0, -2.5, -5),
-      ) +
-      labs(x = "fCmax/MIC (mg/l)", y = "DeltaLog10CFU (CFU/ml)") +
-      ggtitle("VPC for fCmax/MIC in CSF") +
-      theme_minimal()
+auc_obs <- csf_vpc_data$obs_data |> 
+    filter(PKPD_Index == "I2_AUC") |>
+    mutate(bin = ntile(value, 20)) |>
+    group_by(bin) |>
+    summarize(
+      x_mean = mean(value),
+      p5 = quantile(deltaLog10CFU, 0.05),
+      p50 = quantile(deltaLog10CFU, 0.5),
+      p95 = quantile(deltaLog10CFU, 0.95)
+    )
 
-```
+auc_sim <- csf_vpc_data$auc_sim |>
+    group_by(REP) |>
+    mutate(bin = ntile(value, 20)) |>
+    group_by(REP, bin) |>
+    summarize(
+      x_mean = mean(value),
+      p5 = quantile(IPRED, 0.05),
+      p50 = quantile(IPRED, 0.5),
+      p95 = quantile(IPRED, 0.95)
+    ) |>
+    pivot_longer(cols = c(p5, p50, p95), names_to = "percentile", values_to = "value") |>
+    group_by(percentile, bin, x_mean) |>
+    summarize(
+      ic_05 = quantile(value, 0.05),
+      ic_50 = quantile(value, 0.5),
+      ic_95 = quantile(value, 0.95)
+    )
 
-And finaly, T\>MIC VPCs in CSF
-
-```{r}
 tmic_obs <- csf_vpc_data$obs_data |>
     filter(PKPD_Index == "I3_ToverMIC") |>
     mutate(bin = ntile(value, 20)) |>
@@ -582,8 +520,63 @@ tmic_sim <- csf_vpc_data$tmic_sim |>
       ic_50 = quantile(value, 0.5),
       ic_95 = quantile(value, 0.95)
     )
+```
 
-ggplot() +
+```{r}
+### Generate fCmax/MIC plot
+p1 <- ggplot() +
+      geom_smooth(data = cmax_obs, aes(x = x_mean, y = p5), 
+                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
+      geom_smooth(data = cmax_obs, aes(x = x_mean, y = p50), 
+                  method = "loess", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
+      geom_smooth(data = cmax_obs, aes(x = x_mean, y = p95), 
+                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
+      geom_smooth(data = cmax_sim |> filter(percentile == "p5"), aes(x = x_mean, y = ic_50), 
+                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
+      geom_smooth(data = cmax_sim |> filter(percentile == "p50"), aes(x = x_mean, y = ic_50), 
+                  method = "loess", color = "red", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
+      geom_smooth(data = cmax_sim |> filter(percentile == "p95"), aes(x = x_mean, y = ic_50), 
+                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
+      scale_x_continuous(
+        limits = c(0.1, 100),
+        breaks = c(0.1, 1, 10, 100),
+        trans = "log10"
+      ) +
+      scale_y_continuous(
+        limits = c(-5, 6),
+        breaks = c(5, 2.5, 0, -2.5, -5),
+      ) +
+      labs(x = "fCmax/MIC", y = "DeltaLog10CFU (CFU/ml)") +
+      theme_minimal()
+
+### Generate fAUC/MIC plot
+p2 <- ggplot() +
+      geom_smooth(data = auc_obs, aes(x = x_mean, y = p5), 
+                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
+      geom_smooth(data = auc_obs, aes(x = x_mean, y = p50), 
+                  method = "loess", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
+      geom_smooth(data = auc_obs, aes(x = x_mean, y = p95), 
+                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
+      geom_smooth(data = auc_sim |> filter(percentile == "p5"), aes(x = x_mean, y = ic_50), 
+                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
+      geom_smooth(data = auc_sim |> filter(percentile == "p50"), aes(x = x_mean, y = ic_50), 
+                  method = "loess", color = "red", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
+      geom_smooth(data = auc_sim |> filter(percentile == "p95"), aes(x = x_mean, y = ic_50), 
+                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
+      scale_x_continuous(
+        limits = c(1, 1000),
+        breaks = c(1, 10, 100, 1000),
+        trans = "log10"
+      ) +
+      scale_y_continuous(
+        limits = c(-5, 6),
+        breaks = c(5, 2.5, 0, -2.5, -5),
+      ) +
+      labs(x = "fAUC/MIC", y = NULL) +
+      theme_minimal()
+
+### Generate T>MIC plot
+p3 <- ggplot() +
       geom_smooth(data = tmic_obs, aes(x = x_mean, y = p5), 
                   method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
       geom_smooth(data = tmic_obs, aes(x = x_mean, y = p50), 
@@ -604,10 +597,11 @@ ggplot() +
         limits = c(-5, 6),
         breaks = c(5, 2.5, 0, -2.5, -5),
       ) +
-      labs(x = "T>MIC (%)", y = "DeltaLog10CFU (CFU/ml)") +
-      ggtitle("VPC for T>MIC in CSF") +
+      labs(x = "T>MIC (%)", y = NULL) +
       theme_minimal()
 
+### merge the 3 VPCs
+p1 + p2 + p3 + plot_layout(ncol = 3) + ggsave("VPC.png", width = 15, height = 3)
 ```
 
 ## Stratification plots
