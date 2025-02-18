@@ -494,7 +494,7 @@ auc_sim <- csf_vpc_data$auc_sim |>
 
 tmic_obs <- csf_vpc_data$obs_data |>
     filter(PKPD_Index == "I3_ToverMIC") |>
-    mutate(bin = ntile(value, 20)) |>
+     mutate(bin = cut(value, breaks = seq(0, 100, by = 20), right = FALSE)) |>
     group_by(bin) |>
     summarize(
       x_mean = mean(value),
@@ -546,7 +546,7 @@ p1 <- ggplot() +
     trans = "log10"
   ) +
   scale_y_continuous(
-    limits = c(-5, 6),
+    limits = c(-5.5, 6),
     breaks = c(5, 2.5, 0, -2.5, -5),
   ) +
   scale_linetype_manual(name = "Observed Percentiles",
@@ -582,7 +582,7 @@ p2 <- ggplot() +
     trans = "log10"
   ) +
   scale_y_continuous(
-    limits = c(-5, 6),
+    limits = c(-5.5, 6),
     breaks = c(5, 2.5, 0, -2.5, -5),
   ) +
   scale_linetype_manual(name = "Observed Percentiles",
@@ -617,7 +617,7 @@ p3 <- ggplot() +
     breaks = c(0, 25, 50, 75, 100)
   ) +
   scale_y_continuous(
-    limits = c(-5, 6),
+    limits = c(-5.5, 6),
     breaks = c(5, 2.5, 0, -2.5, -5),
   ) +
   scale_linetype_manual(name = "Observed Percentiles",
@@ -637,7 +637,7 @@ p3 <- ggplot() +
 p1 + p2 + p3 + 
   plot_layout(ncol = 3, guides = "collect") + 
   plot_annotation(theme = theme(legend.position = "top")) + 
-  ggsave(file.path(getwd(), "results", "VPC.png"), width = 15, height = 4)
+  ggsave(file.path(getwd(), "results", "VPC - CSF.png"), width = 15, height = 4)
 
 ```
 
