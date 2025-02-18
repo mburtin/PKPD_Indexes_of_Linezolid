@@ -523,85 +523,122 @@ tmic_sim <- csf_vpc_data$tmic_sim |>
 ```
 
 ```{r}
-### Generate fCmax/MIC plot
+library(ggplot2)
+library(patchwork)
+
+# Ajouter une légende pour les couleurs dans les géométries
 p1 <- ggplot() +
-      geom_smooth(data = cmax_obs, aes(x = x_mean, y = p5), 
-                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
-      geom_smooth(data = cmax_obs, aes(x = x_mean, y = p50), 
-                  method = "loess", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
-      geom_smooth(data = cmax_obs, aes(x = x_mean, y = p95), 
-                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
-      geom_smooth(data = cmax_sim |> filter(percentile == "p5"), aes(x = x_mean, y = ic_50), 
-                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      geom_smooth(data = cmax_sim |> filter(percentile == "p50"), aes(x = x_mean, y = ic_50), 
-                  method = "loess", color = "red", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      geom_smooth(data = cmax_sim |> filter(percentile == "p95"), aes(x = x_mean, y = ic_50), 
-                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      scale_x_continuous(
-        limits = c(0.1, 100),
-        breaks = c(0.1, 1, 10, 100),
-        trans = "log10"
-      ) +
-      scale_y_continuous(
-        limits = c(-5, 6),
-        breaks = c(5, 2.5, 0, -2.5, -5),
-      ) +
-      labs(x = "fCmax/MIC", y = "DeltaLog10CFU (CFU/ml)") +
-      theme_minimal()
+  geom_smooth(data = cmax_obs, aes(x = x_mean, y = p5, linetype = "p5_obs"), 
+              method = "loess", color = "black", size = 0.5, se = FALSE, span = 1) +
+  geom_smooth(data = cmax_obs, aes(x = x_mean, y = p50, linetype = "p50_obs"), 
+              method = "loess", color = "black", size = 0.75, se = FALSE, span = 1) +
+  geom_smooth(data = cmax_obs, aes(x = x_mean, y = p95, linetype = "p95_obs"), 
+              method = "loess", color = "black", size = 0.5, se = FALSE, span = 1) +
+  geom_smooth(data = cmax_sim |> filter(percentile == "p5"), aes(x = x_mean, y = ic_50, color = "p5_sim"), 
+              method = "loess", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
+  geom_smooth(data = cmax_sim |> filter(percentile == "p50"), aes(x = x_mean, y = ic_50, color = "p50_sim"), 
+              method = "loess", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
+  geom_smooth(data = cmax_sim |> filter(percentile == "p95"), aes(x = x_mean, y = ic_50, color = "p95_sim"), 
+              method = "loess", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
+  scale_x_continuous(
+    limits = c(0.1, 100),
+    breaks = c(0.1, 1, 10, 100),
+    trans = "log10"
+  ) +
+  scale_y_continuous(
+    limits = c(-5, 6),
+    breaks = c(5, 2.5, 0, -2.5, -5),
+  ) +
+  scale_linetype_manual(name = "Observed Percentiles",
+                        values = c("p5_obs" = "dashed", "p50_obs" = "solid", "p95_obs" = "dashed"),
+                        labels = c("p5_obs" = "5%", "p50_obs" = "50%", "p95_obs" = "95%")) +
+  scale_color_manual(name = "Simulated Percentiles",
+                     values = c("p5_sim" = "blue", "p50_sim" = "red", "p95_sim" = "blue"),
+                     labels = c("p5_sim" = "5%", "p50_sim" = "50%", "p95_sim" = "95%")) +
+  guides(
+    color = guide_legend(order = 2, ncol = 3),
+    linetype = guide_legend(order = 1, ncol = 3)
+  ) +
+  labs(x = "fCmax/MIC", y = "DeltaLog10CFU (CFU/ml)") +
+  theme_minimal()
 
-### Generate fAUC/MIC plot
+# Ajouter une légende pour les couleurs dans les géométries
 p2 <- ggplot() +
-      geom_smooth(data = auc_obs, aes(x = x_mean, y = p5), 
-                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
-      geom_smooth(data = auc_obs, aes(x = x_mean, y = p50), 
-                  method = "loess", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
-      geom_smooth(data = auc_obs, aes(x = x_mean, y = p95), 
-                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
-      geom_smooth(data = auc_sim |> filter(percentile == "p5"), aes(x = x_mean, y = ic_50), 
-                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      geom_smooth(data = auc_sim |> filter(percentile == "p50"), aes(x = x_mean, y = ic_50), 
-                  method = "loess", color = "red", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      geom_smooth(data = auc_sim |> filter(percentile == "p95"), aes(x = x_mean, y = ic_50), 
-                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      scale_x_continuous(
-        limits = c(1, 1000),
-        breaks = c(1, 10, 100, 1000),
-        trans = "log10"
-      ) +
-      scale_y_continuous(
-        limits = c(-5, 6),
-        breaks = c(5, 2.5, 0, -2.5, -5),
-      ) +
-      labs(x = "fAUC/MIC", y = NULL) +
-      theme_minimal()
+  geom_smooth(data = auc_obs, aes(x = x_mean, y = p5, linetype = "p5_obs"), 
+              method = "loess", color = "black", size = 0.5, se = FALSE, span = 1) +
+  geom_smooth(data = auc_obs, aes(x = x_mean, y = p50, linetype = "p50_obs"), 
+              method = "loess", color = "black", size = 0.75, se = FALSE, span = 1) +
+  geom_smooth(data = auc_obs, aes(x = x_mean, y = p95, linetype = "p95_obs"), 
+              method = "loess", color = "black", size = 0.5, se = FALSE, span = 1) +
+  geom_smooth(data = auc_sim |> filter(percentile == "p5"), aes(x = x_mean, y = ic_50, color = "p5_sim"), 
+              method = "loess", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
+  geom_smooth(data = auc_sim |> filter(percentile == "p50"), aes(x = x_mean, y = ic_50, color = "p50_sim"), 
+              method = "loess", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
+  geom_smooth(data = auc_sim |> filter(percentile == "p95"), aes(x = x_mean, y = ic_50, color = "p95_sim"), 
+              method = "loess", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
+  scale_x_continuous(
+    limits = c(1, 1000),
+    breaks = c(1, 10, 100, 1000),
+    trans = "log10"
+  ) +
+  scale_y_continuous(
+    limits = c(-5, 6),
+    breaks = c(5, 2.5, 0, -2.5, -5),
+  ) +
+  scale_linetype_manual(name = "Observed Percentiles",
+                        values = c("p5_obs" = "dashed", "p50_obs" = "solid", "p95_obs" = "dashed"),
+                        labels = c("p5_obs" = "5%", "p50_obs" = "50%", "p95_obs" = "95%")) +
+  scale_color_manual(name = "Simulated Percentiles",
+                     values = c("p5_sim" = "blue", "p50_sim" = "red", "p95_sim" = "blue"),
+                     labels = c("p5_sim" = "5%", "p50_sim" = "50%", "p95_sim" = "95%")) +
+  guides(
+    color = guide_legend(order = 2, ncol = 3),
+    linetype = guide_legend(order = 1, ncol = 3)
+  ) +
+  labs(x = "fAUC/MIC", y = NULL) +
+  theme_minimal()
 
-### Generate T>MIC plot
+# Ajouter une légende pour les couleurs dans les géométries
 p3 <- ggplot() +
-      geom_smooth(data = tmic_obs, aes(x = x_mean, y = p5), 
-                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
-      geom_smooth(data = tmic_obs, aes(x = x_mean, y = p50), 
-                  method = "loess", color = "black", linetype = "solid", size = 0.75, se = FALSE, span = 1) +
-      geom_smooth(data = tmic_obs, aes(x = x_mean, y = p95), 
-                  method = "loess", color = "black", linetype = "dashed", size = 0.5, se = FALSE, span = 1) +
-      geom_smooth(data = tmic_sim |> filter(percentile == "p5"), aes(x = x_mean, y = ic_50), 
-                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      geom_smooth(data = tmic_sim |> filter(percentile == "p50"), aes(x = x_mean, y = ic_50), 
-                  method = "loess", color = "red", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      geom_smooth(data = tmic_sim |> filter(percentile == "p95"), aes(x = x_mean, y = ic_50), 
-                  method = "loess", color = "blue", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
-      scale_x_continuous(
-        limits = c(0, 100),
-        breaks = c(0, 25, 50, 75, 100)
-      ) +
-      scale_y_continuous(
-        limits = c(-5, 6),
-        breaks = c(5, 2.5, 0, -2.5, -5),
-      ) +
-      labs(x = "T>MIC (%)", y = NULL) +
-      theme_minimal()
+  geom_smooth(data = tmic_obs, aes(x = x_mean, y = p5, linetype = "p5_obs"), 
+              method = "loess", color = "black", size = 0.5, se = FALSE, span = 1) +
+  geom_smooth(data = tmic_obs, aes(x = x_mean, y = p50, linetype = "p50_obs"), 
+              method = "loess", color = "black", size = 0.75, se = FALSE, span = 1) +
+  geom_smooth(data = tmic_obs, aes(x = x_mean, y = p95, linetype = "p95_obs"), 
+              method = "loess", color = "black", size = 0.5, se = FALSE, span = 1) +
+  geom_smooth(data = tmic_sim |> filter(percentile == "p5"), aes(x = x_mean, y = ic_50, color = "p5_sim"), 
+              method = "loess", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
+  geom_smooth(data = tmic_sim |> filter(percentile == "p50"), aes(x = x_mean, y = ic_50, color = "p50_sim"), 
+              method = "loess", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
+  geom_smooth(data = tmic_sim |> filter(percentile == "p95"), aes(x = x_mean, y = ic_50, color = "p95_sim"), 
+              method = "loess", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
+  scale_x_continuous(
+    limits = c(0, 100),
+    breaks = c(0, 25, 50, 75, 100)
+  ) +
+  scale_y_continuous(
+    limits = c(-5, 6),
+    breaks = c(5, 2.5, 0, -2.5, -5),
+  ) +
+  scale_linetype_manual(name = "Observed Percentiles",
+                        values = c("p5_obs" = "dashed", "p50_obs" = "solid", "p95_obs" = "dashed"),
+                        labels = c("p5_obs" = "5%", "p50_obs" = "50%", "p95_obs" = "95%")) +
+  scale_color_manual(name = "Simulated Percentiles",
+                     values = c("p5_sim" = "blue", "p50_sim" = "red", "p95_sim" = "blue"),
+                     labels = c("p5_sim" = "5%", "p50_sim" = "50%", "p95_sim" = "95%")) +
+  guides(
+    color = guide_legend(order = 2, ncol = 3),
+    linetype = guide_legend(order = 1, ncol = 3)
+  ) +
+  labs(x = "T>MIC (%)", y = NULL) +
+  theme_minimal()
 
-### merge the 3 VPCs
-p1 + p2 + p3 + plot_layout(ncol = 3) + ggsave(file.path(getwd(), "results", "VPC.png"), width = 15, height = 3)
+# Merge the 3 VPCs and collect the legend at the top
+p1 + p2 + p3 + 
+  plot_layout(ncol = 3, guides = "collect") + 
+  plot_annotation(theme = theme(legend.position = "top")) + 
+  ggsave(file.path(getwd(), "results", "VPC.png"), width = 15, height = 4)
+
 ```
 
 ## Stratification plots
