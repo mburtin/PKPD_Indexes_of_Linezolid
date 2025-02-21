@@ -559,7 +559,7 @@ p1 <- ggplot() +
     color = guide_legend(order = 2, ncol = 3),
     linetype = guide_legend(order = 1, ncol = 3)
   ) +
-  labs(x = "fCmax/MIC", y = "DeltaLog10CFU (CFU/ml)") +
+  labs(x = "fCmax/MIC", y = expression(Delta~log[10]~'CFU/ml')) +
   theme_minimal()
 
 # Ajouter une légende pour les couleurs dans les géométries

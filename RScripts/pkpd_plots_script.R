@@ -31,7 +31,7 @@ generate_PKPD_plots <- function(obs_data, pred_data, title, filename) {
     scale_y_continuous(
       breaks = c(-3, 0, 3),
       limits = c(-5, 5),
-      name = expression(Delta~log[10]~'CFU')
+      name = expression(Delta~log[10]~'CFU/ml')
     ) +
     geom_hline(yintercept = 0, linetype = "dotted") +
     theme(panel.grid.major = element_blank(),
