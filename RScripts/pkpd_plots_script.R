@@ -17,15 +17,22 @@ generate_PKPD_plots <- function(obs_data, pred_data, title, filename) {
     facetted_pos_scales(
       x = list(
         PKPD_Index == "I1_Cmax" ~ scale_x_continuous(limits = c(0.1, 100),
-                                                     breaks = c(0.1, 1, 10, 100), trans="log10"),
+                                                     breaks = c(0.1, 1, 10, 100),
+                                                     trans="log10"
+                                                     name = expression(italic(f)*Cmax/MIC)),
         PKPD_Index == "I2_AUC" ~ scale_x_continuous(limits = c(1, 1000), 
-                                                    breaks = c(1, 10, 100, 1000), trans="log10"),
+                                                    breaks = c(1, 10, 100, 1000),
+                                                    trans="log10",
+                                                    name = expression(italic(f)*AUC/MIC)),
         PKPD_Index == "I3_ToverMIC" ~ scale_x_continuous(limits = c(0, 100),
-                                                         breaks = c(0, 25, 50, 75, 100)),
+                                                         breaks = c(0, 25, 50, 75, 100),
+                                                         name = expression(T['>MIC']~'(%)')),
         PKPD_Index == "I4_ToverMIC_4X" ~ scale_x_continuous(limits = c(0, 100),
-                                                            breaks = c(0, 25, 50, 75, 100)),
+                                                            breaks = c(0, 25, 50, 75, 100),
+                                                            name = expression(T['>4x MIC']~'(%)')),
         PKPD_Index == "I5_ToverMIC_10X" ~ scale_x_continuous(limits = c(0, 100),
-                                                             breaks = c(0, 25, 50, 75, 100))
+                                                             breaks = c(0, 25, 50, 75, 100),
+                                                             name = expression(T['>10x MIC']~'(%)'))
       ),
     ) +
     scale_y_continuous(
