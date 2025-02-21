@@ -43,7 +43,7 @@ generate_PKPD_plots <- function(obs_data, pred_data, title, filename) {
           strip.text.x = element_text(size = 12)
     ) +
     geom_line(data = pred_data, mapping = aes(x=value, y=pred), linewidth = 0.8) +
-    geom_text(aes(x = Inf, y = Inf, label = paste("R² = ", round(Adj.Rsq, 2))), 
+    geom_text(aes(x = Inf, y = Inf, label = paste("Adj-R² = ", round(Adj.Rsq, 2))), 
               hjust = 1.2, vjust = 2, size = 4, fontface = "italic", color = "black") +
     ggtitle(title)
   
