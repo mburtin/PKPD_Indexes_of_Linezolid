@@ -523,7 +523,6 @@ tmic_sim <- csf_vpc_data$tmic_sim |>
 ```
 
 ```{r}
-library(ggplot2)
 library(patchwork)
 
 # Ajouter une légende pour les couleurs dans les géométries
@@ -543,7 +542,8 @@ p1 <- ggplot() +
   scale_x_continuous(
     limits = c(0.1, 100),
     breaks = c(0.1, 1, 10, 100),
-    trans = "log10"
+    trans = "log10",
+    name = expression(italic(f)*Cmax/MIC)
   ) +
   scale_y_continuous(
     limits = c(-5.5, 6),
@@ -560,7 +560,8 @@ p1 <- ggplot() +
     linetype = guide_legend(order = 1, ncol = 3)
   ) +
   labs(x = "fCmax/MIC", y = expression(Delta~log[10]~'CFU/ml')) +
-  theme_minimal()
+  theme_minimal() +
+  theme(plot.margin = margin(0, 0, 0, 0))
 
 # Ajouter une légende pour les couleurs dans les géométries
 p2 <- ggplot() +
@@ -579,7 +580,8 @@ p2 <- ggplot() +
   scale_x_continuous(
     limits = c(1, 1000),
     breaks = c(1, 10, 100, 1000),
-    trans = "log10"
+    trans = "log10",
+    name = expression(italic(f)*AUC/MIC)
   ) +
   scale_y_continuous(
     limits = c(-5.5, 6),
@@ -596,7 +598,9 @@ p2 <- ggplot() +
     linetype = guide_legend(order = 1, ncol = 3)
   ) +
   labs(x = "fAUC/MIC", y = NULL) +
-  theme_minimal()
+  theme_minimal() +
+  theme(axis.text.y = element_blank(),
+        plot.margin = margin(0, 0, 0, 0))
 
 # Ajouter une légende pour les couleurs dans les géométries
 p3 <- ggplot() +
@@ -614,7 +618,8 @@ p3 <- ggplot() +
               method = "loess", linetype = "solid", size = 0.6, se = TRUE, span = 1) +
   scale_x_continuous(
     limits = c(0, 100),
-    breaks = c(0, 25, 50, 75, 100)
+    breaks = c(0, 25, 50, 75, 100),
+    name = expression(T['>MIC']~'(%)')
   ) +
   scale_y_continuous(
     limits = c(-5.5, 6),
@@ -631,13 +636,16 @@ p3 <- ggplot() +
     linetype = guide_legend(order = 1, ncol = 3)
   ) +
   labs(x = "T>MIC (%)", y = NULL) +
-  theme_minimal()
+  theme_minimal() +
+  theme(axis.text.y = element_blank(),
+        plot.margin = margin(0, 0, 0, 0))
 
 # Merge the 3 VPCs and collect the legend at the top
 p1 + p2 + p3 + 
   plot_layout(ncol = 3, guides = "collect") + 
-  plot_annotation(theme = theme(legend.position = "top")) + 
-  ggsave(file.path(getwd(), "results", "VPC - CSF.png"), width = 15, height = 4)
+  plot_annotation(theme = theme(legend.position = "top"))
+
+ggsave(file.path(getwd(), "results", "VPC - CSF.png"), width = 9, height = 3)
 
 ```
 
