@@ -4,7 +4,7 @@ author: Michael BURTIN
 format: html
 editor: source
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## Settings & Dependencies
@@ -100,21 +100,25 @@ This block will generate PKPD plots binding Log10 CFU variation at 24h to all po
 # Load the generic function to generate plots
 source("RScripts/pkpd_plots_script.R")
 
-# Generate the plots
-csf_plot <- generate_PKPD_plots(obs_data = csf_data[["obs_mean"]], 
+csf_plot <- generate_PKPD_plots(obs_data = csf_data[["sim_data"]] |> 
+                                  filter(DoseGroup == "fractioned_12h" & AMT == 1200), 
                                 pred_data = csf_data[["pred_data"]], 
                                 title = "LNZ PKPD Index for CSF" ,
                                 filename = "LNZ PKPD Indexes for CSF target.png")
 
-plasma_plot <- generate_PKPD_plots(obs_data = plasma_data[["obs_mean"]], 
-                                   pred_data = plasma_data[["pred_data"]], 
-                                   title = "LNZ PKPD Index for Plasma",
-                                   "LNZ PKPD Indexes for Plasma target.png")
+csf_plot2 <- generate_PKPD_plots2(obs_data = csf_data[["sim_data"]] |> 
+                                  filter(DoseGroup == "fractioned_12h" & AMT == 1200), 
+                                pred_data = csf_data[["pred_data"]], 
+                                title = "LNZ PKPD Index for CSF" ,
+                                filename = "LNZ PKPD Indexes for CSF target.png")
 
-mix_plot <- generate_PKPD_plots(obs_data = csf_with_plasma_index_data[["obs_mean"]], 
-                                pred_data = csf_with_plasma_index_data[["pred_data"]], 
-                                title = "LNZ PKPD Index for CSF with Plasma indexes",
-                                filename = "LNZ PKPD Indexes for CSF target with Plasma Indexes.png")
+library(patchwork)
+csf_plot + csf_plot2 + plot_layout(nrow = 2, guides = 'collect') +
+  plot_annotation(
+    theme = theme(
+      plot.margin = margin(t = 20, r = 40, b = 20, l = 40), 
+    ))
+ggsave("testt2.png", width = 8, height = 4, dpi = 1200)
 
 ```
 
@@ -549,10 +553,10 @@ p1 <- ggplot() +
     limits = c(-5.5, 6),
     breaks = c(4, 2, 0, -2, -4),
   ) +
-  scale_linetype_manual(name = "Observed percentiles",
+  scale_linetype_manual(name = "Percentiles from PKPD model",
                         values = c("p5_obs" = "dashed", "p50_obs" = "solid", "p95_obs" = "dashed"),
                         labels = c("p5_obs" = "5%", "p50_obs" = "50%", "p95_obs" = "95%")) +
-  scale_color_manual(name = "Predicted percentiles",
+  scale_color_manual(name = "Percentiles from Emax model",
                      values = c("p5_sim" = "blue", "p50_sim" = "red", "p95_sim" = "blue"),
                      labels = c("p5_sim" = "5%", "p50_sim" = "50%", "p95_sim" = "95%")) +
   guides(
@@ -561,8 +565,8 @@ p1 <- ggplot() +
   ) +
   labs(x = "fCmax/MIC", y = expression(Delta~log[10]~'CFU/ml')) +
   geom_text(aes(x = Inf, y = Inf, 
-                label = paste("Adj-R² of obs median = ", round(csf_data$correlation_data |> filter(PKPD_Index == "CSF_Cmax") |> pull(Adj.Rsq), 2))),
-            hjust = 1.1, vjust = 3, size = 2.5, fontface = "italic", color = "black") +
+                label = paste("R² = ", round(csf_data$correlation_data |> filter(PKPD_Index == "CSF_Cmax") |> pull(Adj.Rsq), 2))),
+            hjust = 1.1, vjust = 3, size = 4, fontface = "italic", color = "black") +
   theme_minimal() +
   theme(plot.margin = margin(0, 0, 0, 0),
         panel.grid.minor = element_blank(),
@@ -592,10 +596,10 @@ p2 <- ggplot() +
     limits = c(-5.5, 6),
     breaks = c(4, 2, 0, -2, -4),
   ) +
-  scale_linetype_manual(name = "Observed percentiles",
+  scale_linetype_manual(name = "Percentiles from PKPD model",
                         values = c("p5_obs" = "dashed", "p50_obs" = "solid", "p95_obs" = "dashed"),
                         labels = c("p5_obs" = "5%", "p50_obs" = "50%", "p95_obs" = "95%")) +
-  scale_color_manual(name = "Predicted percentiles",
+  scale_color_manual(name = "Percentiles from Emax model",
                      values = c("p5_sim" = "blue", "p50_sim" = "red", "p95_sim" = "blue"),
                      labels = c("p5_sim" = "5%", "p50_sim" = "50%", "p95_sim" = "95%")) +
   guides(
@@ -604,8 +608,8 @@ p2 <- ggplot() +
   ) +
   labs(x = "fAUC/MIC", y = NULL) +
   geom_text(aes(x = Inf, y = Inf, 
-                label = paste("Adj-R² of obs median = ", round(csf_data$correlation_data |> filter(PKPD_Index == "CSF_AUC_MIC") |> pull(Adj.Rsq), 2))),
-            hjust = 1.1, vjust = 3, size = 2.5, fontface = "italic", color = "black") +
+                label = paste("R² = ", round(csf_data$correlation_data |> filter(PKPD_Index == "CSF_AUC_MIC") |> pull(Rsq), 2))),
+            hjust = 1.1, vjust = 3, size = 4, fontface = "italic", color = "black") +
   theme_minimal() +
   theme(axis.text.y = element_blank(),
         plot.margin = margin(0, 0, 0, 0),
@@ -635,10 +639,10 @@ p3 <- ggplot() +
     limits = c(-5.5, 6),
     breaks = c(4, 2, 0, -2, -4),
   ) +
-  scale_linetype_manual(name = "Observed percentiles",
+  scale_linetype_manual(name = "Percentiles from PKPD model",
                         values = c("p5_obs" = "dashed", "p50_obs" = "solid", "p95_obs" = "dashed"),
                         labels = c("p5_obs" = "5%", "p50_obs" = "50%", "p95_obs" = "95%")) +
-  scale_color_manual(name = "Predicted percentiles",
+  scale_color_manual(name = "Percentiles from Emax model",
                      values = c("p5_sim" = "blue", "p50_sim" = "red", "p95_sim" = "blue"),
                      labels = c("p5_sim" = "5%", "p50_sim" = "50%", "p95_sim" = "95%")) +
   guides(
@@ -647,8 +651,8 @@ p3 <- ggplot() +
   ) +
   labs(x = "T>MIC (%)", y = NULL) +
   geom_text(aes(x = Inf, y = Inf, 
-                label = paste("Adj-R² of obs median = ", round(csf_data$correlation_data |> filter(PKPD_Index == "CSF_ToverMIC") |> pull(Adj.Rsq), 2))),
-            hjust = 1.1, vjust = 3, size = 2.5, fontface = "italic", color = "black") +
+                label = paste("R² = ", round(csf_data$correlation_data |> filter(PKPD_Index == "CSF_ToverMIC") |> pull(Rsq), 2))),
+            hjust = 1.1, vjust = 3, size = 4, fontface = "italic", color = "black") +
   theme_minimal() +
   theme(axis.text.y = element_blank(),
         plot.margin = margin(0, 0, 0, 0),
@@ -660,7 +664,7 @@ p1 + p2 + p3 +
   plot_layout(ncol = 3, guides = "collect") + 
   plot_annotation(theme = theme(legend.position = "top"))
 
-ggsave(file.path(getwd(), "results", "VPC - CSF.png"), width = 9, height = 3)
+ggsave(file.path(getwd(), "results", "VPC - CSF.png"), width = 9, height = 3, dpi = 1200)
 
 ```
 
