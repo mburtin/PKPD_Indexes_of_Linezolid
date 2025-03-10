@@ -547,12 +547,12 @@ p1 <- ggplot() +
   ) +
   scale_y_continuous(
     limits = c(-5.5, 6),
-    breaks = c(5, 2.5, 0, -2.5, -5),
+    breaks = c(4, 2, 0, -2, -4),
   ) +
-  scale_linetype_manual(name = "Observed Percentiles",
+  scale_linetype_manual(name = "Observed percentiles",
                         values = c("p5_obs" = "dashed", "p50_obs" = "solid", "p95_obs" = "dashed"),
                         labels = c("p5_obs" = "5%", "p50_obs" = "50%", "p95_obs" = "95%")) +
-  scale_color_manual(name = "Simulated Percentiles",
+  scale_color_manual(name = "Predicted percentiles",
                      values = c("p5_sim" = "blue", "p50_sim" = "red", "p95_sim" = "blue"),
                      labels = c("p5_sim" = "5%", "p50_sim" = "50%", "p95_sim" = "95%")) +
   guides(
@@ -560,8 +560,13 @@ p1 <- ggplot() +
     linetype = guide_legend(order = 1, ncol = 3)
   ) +
   labs(x = "fCmax/MIC", y = expression(Delta~log[10]~'CFU/ml')) +
+  geom_text(aes(x = Inf, y = Inf, 
+                label = paste("Adj-R² of obs median = ", round(csf_data$correlation_data |> filter(PKPD_Index == "CSF_Cmax") |> pull(Adj.Rsq), 2))),
+            hjust = 1.1, vjust = 3, size = 2.5, fontface = "italic", color = "black") +
   theme_minimal() +
-  theme(plot.margin = margin(0, 0, 0, 0))
+  theme(plot.margin = margin(0, 0, 0, 0),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(size = 0.3))
 
 # Ajouter une légende pour les couleurs dans les géométries
 p2 <- ggplot() +
@@ -585,12 +590,12 @@ p2 <- ggplot() +
   ) +
   scale_y_continuous(
     limits = c(-5.5, 6),
-    breaks = c(5, 2.5, 0, -2.5, -5),
+    breaks = c(4, 2, 0, -2, -4),
   ) +
-  scale_linetype_manual(name = "Observed Percentiles",
+  scale_linetype_manual(name = "Observed percentiles",
                         values = c("p5_obs" = "dashed", "p50_obs" = "solid", "p95_obs" = "dashed"),
                         labels = c("p5_obs" = "5%", "p50_obs" = "50%", "p95_obs" = "95%")) +
-  scale_color_manual(name = "Simulated Percentiles",
+  scale_color_manual(name = "Predicted percentiles",
                      values = c("p5_sim" = "blue", "p50_sim" = "red", "p95_sim" = "blue"),
                      labels = c("p5_sim" = "5%", "p50_sim" = "50%", "p95_sim" = "95%")) +
   guides(
@@ -598,9 +603,14 @@ p2 <- ggplot() +
     linetype = guide_legend(order = 1, ncol = 3)
   ) +
   labs(x = "fAUC/MIC", y = NULL) +
+  geom_text(aes(x = Inf, y = Inf, 
+                label = paste("Adj-R² of obs median = ", round(csf_data$correlation_data |> filter(PKPD_Index == "CSF_AUC_MIC") |> pull(Adj.Rsq), 2))),
+            hjust = 1.1, vjust = 3, size = 2.5, fontface = "italic", color = "black") +
   theme_minimal() +
   theme(axis.text.y = element_blank(),
-        plot.margin = margin(0, 0, 0, 0))
+        plot.margin = margin(0, 0, 0, 0),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(size = 0.3))
 
 # Ajouter une légende pour les couleurs dans les géométries
 p3 <- ggplot() +
@@ -623,12 +633,12 @@ p3 <- ggplot() +
   ) +
   scale_y_continuous(
     limits = c(-5.5, 6),
-    breaks = c(5, 2.5, 0, -2.5, -5),
+    breaks = c(4, 2, 0, -2, -4),
   ) +
-  scale_linetype_manual(name = "Observed Percentiles",
+  scale_linetype_manual(name = "Observed percentiles",
                         values = c("p5_obs" = "dashed", "p50_obs" = "solid", "p95_obs" = "dashed"),
                         labels = c("p5_obs" = "5%", "p50_obs" = "50%", "p95_obs" = "95%")) +
-  scale_color_manual(name = "Simulated Percentiles",
+  scale_color_manual(name = "Predicted percentiles",
                      values = c("p5_sim" = "blue", "p50_sim" = "red", "p95_sim" = "blue"),
                      labels = c("p5_sim" = "5%", "p50_sim" = "50%", "p95_sim" = "95%")) +
   guides(
@@ -636,9 +646,14 @@ p3 <- ggplot() +
     linetype = guide_legend(order = 1, ncol = 3)
   ) +
   labs(x = "T>MIC (%)", y = NULL) +
+  geom_text(aes(x = Inf, y = Inf, 
+                label = paste("Adj-R² of obs median = ", round(csf_data$correlation_data |> filter(PKPD_Index == "CSF_ToverMIC") |> pull(Adj.Rsq), 2))),
+            hjust = 1.1, vjust = 3, size = 2.5, fontface = "italic", color = "black") +
   theme_minimal() +
   theme(axis.text.y = element_blank(),
-        plot.margin = margin(0, 0, 0, 0))
+        plot.margin = margin(0, 0, 0, 0),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(size = 0.3))
 
 # Merge the 3 VPCs and collect the legend at the top
 p1 + p2 + p3 + 
