@@ -18,7 +18,7 @@ generate_PKPD_plots <- function(obs_data, pred_data, title, filename) {
       x = list(
         PKPD_Index == "I1_Cmax" ~ scale_x_continuous(limits = c(0.1, 100),
                                                      breaks = c(0.1, 1, 10, 100),
-                                                     trans="log10"
+                                                     trans="log10",
                                                      name = expression(italic(f)*Cmax/MIC)),
         PKPD_Index == "I2_AUC" ~ scale_x_continuous(limits = c(1, 1000), 
                                                     breaks = c(1, 10, 100, 1000),
@@ -36,7 +36,7 @@ generate_PKPD_plots <- function(obs_data, pred_data, title, filename) {
       ),
     ) +
     scale_y_continuous(
-      breaks = c(-3, 0, 3),
+      breaks = c(-4, -2, 0, 2, 4),
       limits = c(-5, 5),
       name = expression(Delta~log[10]~'CFU/ml')
     ) +
