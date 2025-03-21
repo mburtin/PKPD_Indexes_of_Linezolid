@@ -19,11 +19,6 @@ Load necessary library and dependencies for the project. You can also specify di
 ## Load dependencies
 ####
 library(mrgsolve)       # Simulation package
-library(dplyr)          # Data manipulation
-library(tidyr)          # Data manipulation
-library(purrr)          # Data manipulation
-library(tibble)         # Data manipulation
-library(ggplot2)        # Plotting
 
 # If doesn't exist, create a folder for plots
 if (!dir.exists("results")) {

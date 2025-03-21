@@ -3,15 +3,13 @@ library(tictoc)
 tic()
 
 # Check depencies and load them if necessary
-require(mrgsolve)       # Simulation package
+require(mrgsolve)       # Simulations
 require(dplyr)          # Data manipulation
 require(tidyr)          # Data manipulation
 require(purrr)          # Data manipulation
 require(tibble)         # Data manipulation
 require(future)         # Multithreading
 require(future.apply)   # Multithreading
-require(ggplot2)        # Plotting
-require(ggh4x)          # Plotting (allow to set custom scales for each facet - here each PK/PD index)
 
 #############################################################################
 ###########                   MrgSolve Simulations                ###########                       
@@ -74,29 +72,18 @@ message(" - Fractioned doses... (1/3)")
 # Start multithreading session
 plan(multisession, workers = thread_number)
 
-# Multithreading loop: one thread by strain 
+# Multithreading loop: one thread per strain
 fractioned_results <- future_lapply(1:length(model_list), function(i) {
   result_list <- lapply(fractioned_daily_AMT, function(fractioned_daily_AMT_value) {
     simulate_fractioned_dose(i, fractioned_daily_AMT_value)
   })
-  # Combine all results
-  do.call(rbind, result_list)
+  bind_rows(result_list)
 }, future.seed = TRUE)
 
-# Give the proper strain name to each list elements
+# Give the proper strain name to each list element
 names(fractioned_results) <- names(model_list)
 
-# Loop over all the list to only keep values at 24h
-fractioned_24h <- future_lapply(fractioned_results, function(df) {
-  df[df$time == 24.0, ]
-})
-
-# Stop multithreading session
-plan(sequential)
-
-# Combine all fractioned dataframe in one
-fractioned_24h_full <- do.call(rbind, fractioned_24h)
-
+fractioned_24h_full <- bind_rows(fractioned_results) |> filter(time == 24.0)
 #######
 ##  Continuous infusion simulations
 ######
@@ -112,8 +99,7 @@ continuous_inf_amt <- fractioned_24h_full |>
   summarize(AMT_Inf = mean(AUCCENTRAL)*(CL/FU),
             AMT_Loading = mean(AUCCENTRAL)/24*V1/FU,
             Conc_mean = mean(AUCCENTRAL)/24) |>
-  mutate(DoseGroup = 0) |>
-  select(AMT_Inf, AMT_Loading, Conc_mean, DoseGroup)
+  select(-c(AMT))
 
 # Create event table for both doses
 create_dosing_events <- function(id, loading_amt, inf_amt) {
@@ -132,18 +118,16 @@ create_dosing_events <- function(id, loading_amt, inf_amt) {
   return(c(loading_dose, infusion_dose))
 }
 
-
-plan(multisession, workers = thread_number)
-
+# Loop over all the models to simulate the continuous infusions
 continuous_inf_results <- future_lapply(1:length(model_list), function(i) {
   
-  # Initialisation de la liste pour stocker les résultats de chaque modèle
+  # Initialize an empty list to store results
   model_results <- list()
   
-  # Boucle interne sur les doses dans continuous_inf_amt
+  # Loop over all the continuous infusion doses
   for (j in 1:nrow(continuous_inf_amt)) {
     
-    # Créer les événements de dosage en une seule étape sans do.call + lapply
+    # Create dosing events
     inf_dose <- mapply(function(id) {
       create_dosing_events(
         id = id,
@@ -154,7 +138,7 @@ continuous_inf_results <- future_lapply(1:length(model_list), function(i) {
     
     inf_dose <- do.call(c, inf_dose)
     
-    # Simuler avec mrgsolve
+    # MrgSolve simulations
     continuous_inf <- model_list[[i]] |>
       mrgsolve::data_set(inf_dose) |>
       mrgsolve::mrgsim(delta = 1, end = 24) |>
@@ -163,19 +147,19 @@ continuous_inf_results <- future_lapply(1:length(model_list), function(i) {
              DoseGroup = "continuous_infusion") |>
       clean_sim_table()
     
-    # Ajouter les résultats à la liste
+    # Add results to the list
     model_results[[j]] <- continuous_inf
   }
   
-  # Retourner les résultats du modèle en une seule data frame
+  # Return result in one dataframe
   return(bind_rows(model_results))
+  
 }, future.seed = TRUE)
 
-plan(sequential)
-
-# Combiner tous les résultats des différents modèles en un seul data frame
+# Combine all continuous infusion dataframes in one
 continuous_inf_results <- bind_rows(continuous_inf_results)
-  
+
+# Keep only values at 24h
 continuous_inf_24h <- continuous_inf_results |> filter(time == 24.0)
 
 #######
@@ -183,18 +167,31 @@ continuous_inf_24h <- continuous_inf_results |> filter(time == 24.0)
 ######
 # Print a progress message in the console
 message(" - Control... (3/3)")
-## Simulate a control with AMT = 0
-control_results <- do.call(rbind, lapply(1:length(model_list), function(i) {
-  model_list[[i]] |>
+
+# Loop over all the models to simulate
+control_results_list <- future_lapply(1:length(model_list), function(i) {
+  
+  # MrgSolve simulations
+  sim_result <- model_list[[i]] |>
     mrgsolve::idata_set(i_data) |>
     mrgsolve::ev(amt = 0, tinf = 0.5, ii = 24, addl = 0) |>
     mrgsolve::mrgsim(delta = 1, end = 24) |>
     dplyr::mutate(STRN = names(model_list[i]), AMT = 0, DoseGroup = "control") |>
     clean_sim_table()
-})) |>
-  tibble::as_tibble()
+  
+  # Return result in one dataframe
+  return(sim_result)
+  
+}, future.seed = TRUE)
 
+# Combine all continuous infusion dataframes in one
+control_results <- bind_rows(control_results_list) |> tibble::as_tibble()
+
+# Keep only values at 24h
 control_24h <- control_results |> filter(time == 24.0)
+
+# Stop multithreading session
+plan(sequential)
 
 #############################################################################
 ###########                   Data pre-processing                 ###########                       
@@ -205,8 +202,7 @@ message("Pre-process data...")
 # Merge the data for fractioned doses and constant perfusion
 # Transform and pivot also indexes
 # Drop unused colunms
-sim_formated_data <- rbind(fractioned_24h_full, continuous_inf_24h, control_24h) |>
-  select(-c(ID)) |>
+sim_formated_data <- bind_rows(fractioned_24h_full, continuous_inf_24h, control_24h) |>
   mutate(ID = row_number()) |>
   group_by(STRN, DoseGroup, AMT, ID) |>
   mutate(
@@ -241,9 +237,9 @@ mix_sim_data <- sim_formated_data |> rename("Log10CFU" = Log10CFU_CSF) |> filter
 
 source("RScripts/pkpd_fitting_script.R")
 
-generate_PKPD_fit_data <- function(corrData) {
+generate_PKPD_fit_data <- function(data) {
   
-  correlation_data <- corrData |>
+  correlation_data <- data |>
     unnest(c(data)) |> # Unwrap the main dataset
     select(STRN, MIC, DoseGroup, ID, AMT, time, B0, PKPD_Index, value, Log10CFU, deltaLog10CFU, Rsq, Adj.Rsq) |>
     filter(ID > 0) |>
@@ -253,7 +249,8 @@ generate_PKPD_fit_data <- function(corrData) {
       PKPD_Index %in% c("CENTRAL_AUC_MIC", "CSF_AUC_MIC") ~ "I2_AUC",
       PKPD_Index %in% c("CENTRAL_ToverMIC", "CSF_ToverMIC") ~ "I3_ToverMIC",
       TRUE ~ PKPD_Index
-    ))
+    )) |>
+    ungroup()
   
   return(correlation_data)
 }
@@ -290,7 +287,8 @@ generate_pred_data <- function(data) {
       PKPD_Index %in% c("CENTRAL_AUC_MIC", "CSF_AUC_MIC") ~ "I2_AUC",
       PKPD_Index %in% c("CENTRAL_ToverMIC", "CSF_ToverMIC") ~ "I3_ToverMIC",
       TRUE ~ PKPD_Index
-    )) |> filter(!((PKPD_Index %in% c("I3_ToverMIC")) & value > 100))
+    )) |> filter(!((PKPD_Index %in% c("I3_ToverMIC")) & value > 100)) |>
+    ungroup()
   
   return(pred_data)
 }
@@ -303,29 +301,26 @@ mix_pred_data <- generate_pred_data(mix_corrCurve_data)
 #############################################################################
 
 csf_obs_mean <- csf_sim_data |>
-  group_by(STRN, MIC, DoseGroup, AMT, time, B0, PKPD_Index) |>
+  group_by(STRN, DoseGroup, AMT, PKPD_Index) |>
   summarize( 
     value = mean(value),
     deltaLog10CFU = mean(deltaLog10CFU),
-    Rsq = mean(Rsq),
-    Adj.Rsq = mean(Adj.Rsq)
+    Rsq = unique(Rsq),
   )
 
 mix_obs_mean <- mix_sim_data |>
-  group_by(STRN, MIC, DoseGroup, AMT, time, B0, PKPD_Index) |>
+  group_by(STRN, DoseGroup, AMT, PKPD_Index) |>
   summarize( 
     value = mean(value),
     deltaLog10CFU = mean(deltaLog10CFU),
-    Rsq = mean(Rsq),
-    Adj.Rsq = mean(Adj.Rsq)
+    Rsq = unique(Rsq),
   )
 
 #############################################################################
 ########                    Environment cleaning                    ########                       
 #############################################################################
-
-sim_results_fractioned <- list(fractioned_results = fractioned_results, 
-                               fractioned_24h = fractioned_24h, 
+# Reorganize all data in lists
+sim_results_fractioned <- list(fractioned_results = fractioned_results,
                                fractioned_24h_full = fractioned_24h_full)
 
 sim_results_continuous_inf <- list(continuous_inf_results = continuous_inf_results, 
@@ -351,10 +346,12 @@ csf_with_plasma_index_data <- list(
 
 mrgsolve_model <- list(model_file = model_file, model_list = model_list)
 
+# Stop recording time execution
 elapsed <- toc(quiet = TRUE)
-message("Total execution time: ", round(elapsed$toc - elapsed$tic, 2), " seconds")
+message("Total execution time: ", round(elapsed$toc - elapsed$tic, 0), " seconds")
 
-rm(fractioned_results, fractioned_24h, fractioned_24h_full, 
+# Clean the environment
+rm(fractioned_results, fractioned_24h_full, 
    continuous_inf_results, continuous_inf_24h, continuous_inf_amt, 
    control_results, control_24h, i_data, 
    csf_sim_data, mix_sim_data,
