@@ -241,7 +241,7 @@ generate_PKPD_fit_data <- function(data) {
   
   correlation_data <- data |>
     unnest(c(data)) |> # Unwrap the main dataset
-    select(STRN, MIC, DoseGroup, ID, AMT, time, B0, PKPD_Index, value, Log10CFU, deltaLog10CFU, Rsq, Adj.Rsq) |>
+    select(STRN, MIC, DoseGroup, ID, AMT, time, B0, PKPD_Index, value, Log10CFU, deltaLog10CFU, Rsq) |>
     filter(ID > 0) |>
     # Facet_grid order by name, so this fix AUC/MIC displayed before Cmax
     mutate(PKPD_Index = case_when(
@@ -281,7 +281,7 @@ generate_pred_data <- function(data) {
     select(-c("data", "nls")) |> 
     group_by(PKPD_Index, I0, Imax, IC50, H)  |>
     expand(value = seq(0.1, 1000, 0.1)) |>
-    mutate(pred = Imax_model(value, I0, Imax, IC50, H)) |>
+    mutate(pred = Emax_model(value, I0, Imax, IC50, H)) |>
     mutate(PKPD_Index = case_when(
       PKPD_Index %in% c("CENTRAL_Cmax", "CSF_Cmax") ~ "I1_Cmax",
       PKPD_Index %in% c("CENTRAL_AUC_MIC", "CSF_AUC_MIC") ~ "I2_AUC",
@@ -317,7 +317,7 @@ mix_obs_mean <- mix_sim_data |>
   )
 
 #############################################################################
-########                    Environment cleaning                    ########                       
+########                    Environment cleaning                     ########                       
 #############################################################################
 # Reorganize all data in lists
 sim_results_fractioned <- list(fractioned_results = fractioned_results,

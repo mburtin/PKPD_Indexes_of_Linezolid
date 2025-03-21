@@ -84,18 +84,18 @@ This block will generate PKPD plots binding Log10 CFU variation at 24h to all po
 
 ```{r}
 # Load the generic function to generate plots
-source("RScripts/pkpd_plots_script.R")
+source("RScripts/pkpd_index_plots_script.R")
 
 # Generate the plots
-csf_plot <- generate_PKPD_plots(obs_data = csf_data[["obs_mean"]], 
-                                pred_data = csf_data[["pred_data"]], 
-                                title = "LNZ PKPD Index for CSF" ,
-                                filename = "LNZ PKPD Indexes for CSF target.png")
+csf_plot <- PKPD_index_plots(obs_data = csf_data[["obs_mean"]], 
+                             pred_data = csf_data[["pred_data"]], 
+                             title = "CSF-derived PKPD Index for Linezolid and specfic to CSF infections" ,
+                             filename = "CSF-derived PKPD Index for Linezolid.png")
 
-mix_plot <- generate_PKPD_plots(obs_data = csf_with_plasma_index_data[["obs_mean"]], 
-                                pred_data = csf_with_plasma_index_data[["pred_data"]], 
-                                title = "LNZ PKPD Index for CSF with Plasma indexes",
-                                filename = "LNZ PKPD Indexes for CSF target with Plasma Indexes.png")
+mix_plot <- PKPD_index_plots(obs_data = csf_with_plasma_index_data[["obs_mean"]], 
+                             pred_data = csf_with_plasma_index_data[["pred_data"]], 
+                             title = "Plasma-derived PKPD Index for Linezolid and specfic to CSF infections",
+                             filename = "Plasma-derived PKPD Index for Linezolid.png")
 
 ```
 
@@ -375,132 +375,11 @@ source("RScripts/target_errors_estimation.R")
 Generate all VPC objects needed for plots.
 
 ```{r}
+## Allow to setup your VPC data quickly
+bin_data = csf_vpc_data
+
+## Execute the VPC script
 source("RScripts/vpc_script.R")
-
-csf_vpc_data <- list(
-  obs_data = generate_obs_data(csf_data[["sim_data"]]),
-  cmax_sim = generate_pred_data(sim_data = csf_data[["correlation_data"]], 
-                                obs_data = generate_obs_data(csf_data[["sim_data"]]),
-                                pkpd_index = "I1_Cmax",
-                                n_sim = 100),
-  auc_sim = generate_pred_data(sim_data = csf_data[["correlation_data"]], 
-                                obs_data = generate_obs_data(csf_data[["sim_data"]]),
-                                pkpd_index = "I2_AUC",
-                                n_sim = 100),
-  tmic_sim = generate_pred_data(sim_data = csf_data[["correlation_data"]], 
-                                obs_data = generate_obs_data(csf_data[["sim_data"]]),
-                                pkpd_index = "I3_ToverMIC",
-                                n_sim = 100)
-)
-
-csf_vpc_with_plasma_index_data <- list(
-  obs_data = generate_obs_data(csf_with_plasma_index_data[["sim_data"]]),
-  cmax_sim = generate_pred_data(sim_data = csf_with_plasma_index_data[["correlation_data"]], 
-                                obs_data = generate_obs_data(csf_with_plasma_index_data[["sim_data"]]),
-                                pkpd_index = "I1_Cmax",
-                                n_sim = 100),
-  auc_sim = generate_pred_data(sim_data = csf_with_plasma_index_data[["correlation_data"]], 
-                                obs_data = generate_obs_data(csf_with_plasma_index_data[["sim_data"]]),
-                                pkpd_index = "I2_AUC",
-                                n_sim = 100),
-  tmic_sim = generate_pred_data(sim_data = csf_with_plasma_index_data[["correlation_data"]], 
-                                obs_data = generate_obs_data(csf_with_plasma_index_data[["sim_data"]]),
-                                pkpd_index = "I3_ToverMIC",
-                                n_sim = 100)
-)
-
-gc()
-```
-
-Generate the binning data
-
-```{r}
-cmax_obs <- csf_vpc_data$obs_data |>
-    filter(PKPD_Index == "I1_Cmax") |>
-    mutate(bin = ntile(value, 20)) |>
-    group_by(bin) |>
-    summarize(
-      x_mean = mean(value),
-      p5 = quantile(deltaLog10CFU, 0.05),
-      p50 = quantile(deltaLog10CFU, 0.5),
-      p95 = quantile(deltaLog10CFU, 0.95)
-    )
-
-cmax_sim <- csf_vpc_data$cmax_sim |>
-    group_by(REP) |>
-    mutate(bin = ntile(value, 20)) |>
-    group_by(REP, bin) |>
-    summarize(
-      x_mean = mean(value),
-      p5 = quantile(IPRED, 0.05),
-      p50 = quantile(IPRED, 0.5),
-      p95 = quantile(IPRED, 0.95)
-    ) |>
-    pivot_longer(cols = c(p5, p50, p95), names_to = "percentile", values_to = "value") |>
-    group_by(percentile, bin, x_mean) |>
-    summarize(
-      ic_05 = quantile(value, 0.05),
-      ic_50 = quantile(value, 0.5),
-      ic_95 = quantile(value, 0.95)
-    )
-
-auc_obs <- csf_vpc_data$obs_data |> 
-    filter(PKPD_Index == "I2_AUC") |>
-    mutate(bin = ntile(value, 20)) |>
-    group_by(bin) |>
-    summarize(
-      x_mean = mean(value),
-      p5 = quantile(deltaLog10CFU, 0.05),
-      p50 = quantile(deltaLog10CFU, 0.5),
-      p95 = quantile(deltaLog10CFU, 0.95)
-    )
-
-auc_sim <- csf_vpc_data$auc_sim |>
-    group_by(REP) |>
-    mutate(bin = ntile(value, 20)) |>
-    group_by(REP, bin) |>
-    summarize(
-      x_mean = mean(value),
-      p5 = quantile(IPRED, 0.05),
-      p50 = quantile(IPRED, 0.5),
-      p95 = quantile(IPRED, 0.95)
-    ) |>
-    pivot_longer(cols = c(p5, p50, p95), names_to = "percentile", values_to = "value") |>
-    group_by(percentile, bin, x_mean) |>
-    summarize(
-      ic_05 = quantile(value, 0.05),
-      ic_50 = quantile(value, 0.5),
-      ic_95 = quantile(value, 0.95)
-    )
-
-tmic_obs <- csf_vpc_data$obs_data |>
-    filter(PKPD_Index == "I3_ToverMIC") |>
-     mutate(bin = cut(value, breaks = seq(0, 100, by = 20), right = FALSE)) |>
-    group_by(bin) |>
-    summarize(
-      x_mean = mean(value),
-      p5 = quantile(deltaLog10CFU, 0.05),
-      p50 = quantile(deltaLog10CFU, 0.5),
-      p95 = quantile(deltaLog10CFU, 0.95)
-    )
-
-tmic_sim <- csf_vpc_data$tmic_sim |>
-    group_by(REP) |>
-    mutate(bin = cut(value, breaks = seq(0, 100, by = 20), right = FALSE)) |>
-    group_by(REP, bin) |>
-    summarize(
-      x_mean = mean(value),
-      p5 = quantile(IPRED, 0.05),
-      p50 = quantile(IPRED, 0.5),
-      p95 = quantile(IPRED, 0.95)
-    ) |>
-    pivot_longer(cols = c(p5, p50, p95), names_to = "percentile", values_to = "value") |>
-    group_by(percentile, bin, x_mean) |>
-    summarize(
-      ic_05 = quantile(value, 0.05),
-      ic_50 = quantile(value, 0.5),
-      ic_95 = quantile(value, 0.95)
-    )
 ```
 
 ```{r}

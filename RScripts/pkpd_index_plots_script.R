@@ -1,4 +1,4 @@
-generate_PKPD_plots <- function(obs_data, pred_data, title, filename) {
+PKPD_index_plots <- function(obs_data, pred_data, title, file_name) {
   # Check if library are loaded
   require(ggplot2)        # Plotting
   require(ggh4x)          # Plotting (allow to set custom scales for each facet)
@@ -53,5 +53,5 @@ generate_PKPD_plots <- function(obs_data, pred_data, title, filename) {
   }
   
   # Save the plot
-  ggsave(file.path(getwd(), "results", filename), width = 12, height = 3, units = "in", dpi = 1200)
+  ggsave(file.path(getwd(), "results", file_name), width = 12, height = 3, units = "in", dpi = 1200)
 }

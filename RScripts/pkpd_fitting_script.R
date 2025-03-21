@@ -25,15 +25,14 @@ calculate_rsq <- function(model)
     int.df <- 1
     tss <- sum(w * (resp - center) ^ 2)
     r.sq <- 1 - rss / tss
-    adj.r.sq <-
-      1 - (1 - r.sq) * (n - int.df) / r.df
+    adj.r.sq <- 1 - (1 - r.sq) * (n - int.df) / r.df
     out <- list(pseudo.R.squared = r.sq,
                 adj.R.squared = adj.r.sq)
   }
 }
 
 ## Model definition
-Imax_model <-  function(IndexValue, I0, Imax, IC50, H)
+Emax_model <-  function(IndexValue, I0, Imax, IC50, H)
 {
   I0 - (Imax * IndexValue ^ H) / (IC50 ^ H + IndexValue ^ H)
 }
@@ -56,7 +55,7 @@ index_PKPD_fit_curve <- function(data) {
     map(nestedData$data,
         ~ tryCatch(
           nlsLM(
-          deltaLog10CFU ~ Imax_model(value, I0, Imax, IC50, H),
+          deltaLog10CFU ~ Emax_model(value, I0, Imax, IC50, H),
           data = .x,
           start = list(
             I0 = 4,
@@ -96,14 +95,6 @@ index_PKPD_fit_curve <- function(data) {
               coefficients(.x)[[1]]
             })
   
-  nestedData$I0_RSE <-
-    map_dbl(nestedData$nls,
-            ~ if (anyNA(.x)) {
-              return(NA)
-            } else {
-              summary(.x)$coefficients[1, 2]
-            })
-  
   nestedData$Imax <-
     map_dbl(nestedData$nls,
             ~ if (anyNA(.x)) {
@@ -111,14 +102,6 @@ index_PKPD_fit_curve <- function(data) {
             }
             else{
               coefficients(.x)[[2]]
-            })
-  
-  nestedData$Imax_RSE <-
-    map_dbl(nestedData$nls,
-            ~ if (anyNA(.x)) {
-              return(NA)
-            } else {
-              summary(.x)$coefficients[2, 2]
             })
   
   nestedData$IC50 <-
@@ -130,14 +113,6 @@ index_PKPD_fit_curve <- function(data) {
               coefficients(.x)[[3]]
             })
   
-  nestedData$IC50_RSE <-
-    map_dbl(nestedData$nls,
-            ~ if (anyNA(.x)) {
-              return(NA)
-            } else {
-              summary(.x)$coefficients[3, 2]
-            })
-  
   nestedData$H <- 
     map_dbl(nestedData$nls,
             ~ if (anyNA(.x)) {
@@ -145,14 +120,6 @@ index_PKPD_fit_curve <- function(data) {
             }
             else{
               coefficients(.x)[[4]]
-            })
-  
-  nestedData$H_RSE <- 
-    map_dbl(nestedData$nls,
-            ~ if (anyNA(.x)) {
-              return(NA)
-            } else {
-              summary(.x)$coefficients[4, 2]
             })
   
   nestedData$Sd_Residuals <- 
