@@ -1,15 +1,15 @@
-//////////////////////////////
-///         Summary        ///
-//////////////////////////////
+////////////////////////////////
+///           Summary        ///
+////////////////////////////////
 $PROB
 - Author : Michael BURTIN
 - Date: 06/11/2024
 - Description: PKPD model for antibiotics effect on simulated bacteria populations. 
                Calculate also PKPD index, and outputs the PD-Index PKPD graph corresponding.
 
-//////////////////////////////
-/// Parameters definition  ///
-//////////////////////////////
+////////////////////////////////
+///    Default parameters    ///
+////////////////////////////////
 $PARAM @annotated   // PK parameters
 PV1  : 36.4    : Volume of central compartment (L)
 PCL  : 8.38    : Clearance (L/h)
@@ -30,9 +30,8 @@ Bmax : 9.3  : Maximal bacterial count (log10(CFU/mL))
 Kg   : 0.83 : Bacterial growth rate (h-1)
 Emax : 1.56 : Maximal rate of effect (h-1)
 EC50 : 1.34 : Necessary concentration to obtain 50% of the maximum effect (mg/L)
-Kd   : 0.0  : Natural death rate of bacteria (h-1) // Not estimated as insignificant
-Kon  : 0.0  : Rate of adaptive resistance development (h-1) // For now disable
-Koff : 0.0  : Rate of adaptive resistance disappearance (h-1) // For now disable
+Kon  : 0.0  : Rate of adaptive resistance development (h-1) // Disable by default
+Koff : 0.0  : Rate of adaptive resistance disappearance (h-1) // Disable by default
   
 $PARAM @annotated   // Other parameters
 MIC  : 2.0  : Minimal inhibitory concentration (mg/L)
@@ -42,7 +41,7 @@ double Cmax_CENTRAL;
 double Cmax_CSF;
 
 ////////////////////////////////
-/// Compartments definition  ///
+///     PKPD Compartments    ///
 ////////////////////////////////
 $CMT @annotated     
 // PK compartments
@@ -55,31 +54,18 @@ Rp_CSF    : Resting bacteria population in CSF (CFU/mL)
 ARoff_CSF : Fictive adaptive resistance compartment for CSF
 ARon_CSF  : Fictive adaptive resistance compartment for CSF
 
-// PD compartments specific to Plasma
-S_CENTRAL     : Active bacteria population in CENTRAL (CFU/mL)
-Rp_CENTRAL    : Resting bacteria population in CENTRAL (CFU/mL)
-ARoff_CENTRAL : Fictive adaptive resistance compartment for CENTRAL
-ARon_CENTRAL  : Fictive adaptive resistance compartment for CENTRAL
-
-// PKPD Indexes (Cmax calculate in Quarto)
+// fAUC & fT>MIC for both plasma & CSF
 AUCCENTRAL        : AUC of Unbound plasma concentrations (mg/L*h)
 AUCCSF            : AUC of CSF concentrations (mg/L*h)
 TOVER_MIC_CENTRAL : Time over MIC in Central compartment (h)
 TOVER_MIC_CSF     : Time over MIC in CSF compartment (h)
-TOVER_4MIC_CENTRAL : Time over 4x MIC in Central compartment (h)
-TOVER_4MIC_CSF     : Time over 4x MIC in CSF compartment (h)
-TOVER_10MIC_CENTRAL : Time over 10x MIC in Central compartment (h)
-TOVER_10MIC_CSF     : Time over 10x MIC in CSF compartment (h)
   
 ////////////////////////////////
 ///       Main function      ///
 ////////////////////////////////
 $MAIN
 S_CSF_0 = pow(10, B0);
-S_CENTRAL_0 = pow(10, B0);
-
 ARoff_CSF_0 = 1;
-ARoff_CENTRAL_0 = 1;
 
 double CL  = PCL*exp(ECL);
 double V1  = PV1*exp(EV1);
@@ -90,9 +76,9 @@ if(TIME == 0.0) {
   Cmax_CSF = 0;
 }
 
-//////////////////////////////
-///  Equations definition  ///
-//////////////////////////////
+////////////////////////////////
+///   Equations definition   ///
+////////////////////////////////
 $ODE    
 // PK Equations
 double k10   = CL/V1;
@@ -106,84 +92,36 @@ dxdt_CSF     = - k21*CSF - k23*CSF + k12*CENTRAL*FU;
 double C_CENTRAL  = (CENTRAL/V1)*FU;  // Unbound concentrations
 double C_CSF      = CSF/V2;
 
-if(C_CENTRAL > Cmax_CENTRAL) Cmax_CENTRAL = C_CENTRAL;
-if(C_CSF > Cmax_CSF) Cmax_CSF = C_CSF;
-
-// PD Equations for CSF target
+// PD Equations
 double B_CSF    = S_CSF + Rp_CSF;
 double E_CSF    = (Emax * (1 - ARon_CSF) * C_CSF) / (C_CSF + EC50);
-double Ksr_CSF  = ((Kg - Kd) * B_CSF) / pow(10, Bmax);
+double Ksr_CSF  = (Kg * B_CSF) / pow(10, Bmax);
 
-dxdt_S_CSF      = Kg*S_CSF - (E_CSF + Kd)*S_CSF - Ksr_CSF*S_CSF;
-dxdt_Rp_CSF     = Ksr_CSF*S_CSF - Kd*Rp_CSF;
+dxdt_S_CSF      = Kg*S_CSF - E_CSF*S_CSF - Ksr_CSF*S_CSF;
+dxdt_Rp_CSF     = Ksr_CSF*S_CSF;
 dxdt_ARoff_CSF  = -Kon*ARoff_CSF + Koff*ARon_CSF;
 dxdt_ARon_CSF   = -Koff*ARon_CSF + Kon*ARoff_CSF;
 
-// PD Equations for Plasma target
-double B_CENTRAL    = S_CENTRAL + Rp_CENTRAL;
-double E_CENTRAL    = (Emax * (1 - ARon_CENTRAL) * C_CENTRAL) / (C_CENTRAL + EC50);
-double Ksr_CENTRAL  = ((Kg - Kd) * B_CENTRAL) / pow(10, Bmax);
+// Track the three PK/PD index (fCmax/fAUC/fT>MIC)
+Cmax_CENTRAL            = (C_CENTRAL > Cmax_CENTRAL) ? C_CENTRAL : Cmax_CENTRAL;
+Cmax_CSF                = (C_CSF > Cmax_CSF) ? C_CSF : Cmax_CSF;
 
-dxdt_S_CENTRAL      = Kg*S_CENTRAL - (E_CENTRAL + Kd)*S_CENTRAL - Ksr_CENTRAL*S_CENTRAL;
-dxdt_Rp_CENTRAL     = Ksr_CENTRAL*S_CENTRAL - Kd*Rp_CENTRAL;
-dxdt_ARoff_CENTRAL  = -Kon*ARoff_CENTRAL + Koff*ARon_CENTRAL;
-dxdt_ARon_CENTRAL   = -Koff*ARon_CENTRAL + Kon*ARoff_CENTRAL;
+dxdt_AUCCENTRAL         = C_CENTRAL;
+dxdt_AUCCSF             = C_CSF;
 
-// Track AUC in Central & CSF compartment
-dxdt_AUCCENTRAL = C_CENTRAL;
-dxdt_AUCCSF     = C_CSF;
-
-// Track fraction of time above MIC in Central compartment
-if (C_CENTRAL > MIC)
-  dxdt_TOVER_MIC_CENTRAL = 1;
-else
-  dxdt_TOVER_MIC_CENTRAL = 0;
-
-// Track fraction of time above MIC in CSF compartment
-if (C_CSF > MIC)
-  dxdt_TOVER_MIC_CSF = 1;
-else
-  dxdt_TOVER_MIC_CSF = 0;
-
-// Track fraction of time above 4x MIC in Central compartment
-if (C_CENTRAL > (4*MIC))
-  dxdt_TOVER_4MIC_CENTRAL = 1;
-else
-  dxdt_TOVER_4MIC_CENTRAL = 0;
-
-// Track fraction of time above 4x MIC in CSF compartment
-if (C_CSF > (4*MIC))
-  dxdt_TOVER_4MIC_CSF = 1;
-else
-  dxdt_TOVER_4MIC_CSF = 0;
-
-// Track fraction of time above 10x MIC in Central compartment
-if (C_CENTRAL > (10*MIC))
-  dxdt_TOVER_10MIC_CENTRAL = 1;
-else
-  dxdt_TOVER_10MIC_CENTRAL = 0;
-
-// Track fraction of time above 10x MIC in CSF compartment
-if (C_CSF > (10*MIC))
-  dxdt_TOVER_10MIC_CSF = 1;
-else
-  dxdt_TOVER_10MIC_CSF = 0;
-
-$SIGMA @labels PD_RES
-0.38
+dxdt_TOVER_MIC_CENTRAL  = (C_CENTRAL > MIC) ? 1 : 0;
+dxdt_TOVER_MIC_CSF      = (C_CSF > MIC) ? 1 : 0;
 
 $TABLE
-double Log10CFU_CENTRAL = log10(S_CENTRAL + Rp_CENTRAL) + PD_RES;
-double Log10CFU_CSF     = log10(S_CSF + Rp_CSF) + PD_RES;
+double Log10CFU_CSF     = log10(S_CSF + Rp_CSF);
 
-//////////////////////////////
-///   Outputs definition   ///
-//////////////////////////////
+////////////////////////////////
+///          Outputs         ///
+////////////////////////////////
 $CAPTURE @annotated
 C_CENTRAL         : Unbound concentration in central compartment (mg/L)
 C_CSF             : Concentration in CSF (mg/L)
 Log10CFU_CSF      : Total bacterial count in CSF (log10(CFU/ml))
-Log10CFU_CENTRAL  : Total bacterial count in central compartment (log10(CFU/ml))
 MIC               : Minimal inhibitory concentration (mg/L)
 B0                : Initial bacterial count (log10(CFU/ml))
 Cmax_CENTRAL      : Maximum free-concentration in central compartment (mg/L)

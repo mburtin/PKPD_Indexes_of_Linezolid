@@ -6,14 +6,12 @@ generate_PKPD_plots <- function(obs_data, pred_data, title, filename) {
   # Generate the plot
   ggplot(obs_data, aes(x=value, y=deltaLog10CFU)) +
     geom_point(size=0.25) +
-    facet_wrap(~ PKPD_Index, scales = "free_x", strip.position = "bottom", nrow = 2, 
+    facet_wrap(~ PKPD_Index, scales = "free_x", strip.position = "bottom", nrow = 1, 
                labeller = labeller(
                  PKPD_Index = c(
                    "I1_Cmax" = "fCmax/MIC",
                    "I2_AUC" = "fAUC/MIC",
-                   "I3_ToverMIC" = "fT>MIC (%)",
-                   "I4_ToverMIC_4X" = "fT>4xMIC (%)",
-                   "I5_ToverMIC_10X" = "fT>10xMIC (%)"))) +
+                   "I3_ToverMIC" = "fT>MIC (%)"))) +
     facetted_pos_scales(
       x = list(
         PKPD_Index == "I1_Cmax" ~ scale_x_continuous(limits = c(0.1, 100),
@@ -26,13 +24,7 @@ generate_PKPD_plots <- function(obs_data, pred_data, title, filename) {
                                                     name = expression(italic(f)*AUC/MIC)),
         PKPD_Index == "I3_ToverMIC" ~ scale_x_continuous(limits = c(0, 100),
                                                          breaks = c(0, 25, 50, 75, 100),
-                                                         name = expression(T['>MIC']~'(%)')),
-        PKPD_Index == "I4_ToverMIC_4X" ~ scale_x_continuous(limits = c(0, 100),
-                                                            breaks = c(0, 25, 50, 75, 100),
-                                                            name = expression(T['>4x MIC']~'(%)')),
-        PKPD_Index == "I5_ToverMIC_10X" ~ scale_x_continuous(limits = c(0, 100),
-                                                             breaks = c(0, 25, 50, 75, 100),
-                                                             name = expression(T['>10x MIC']~'(%)'))
+                                                         name = expression(T['>MIC']~'(%)'))
       ),
     ) +
     scale_y_continuous(
@@ -47,10 +39,11 @@ generate_PKPD_plots <- function(obs_data, pred_data, title, filename) {
           strip.background = element_rect(fill = "white", colour = "transparent"),
           strip.placement = "outside",
           axis.title.y = element_text(size = 12),
-          strip.text.x = element_text(size = 12)
+          strip.text.x = element_text(size = 12),
+          axis.title.x = element_blank()
     ) +
     geom_line(data = pred_data, mapping = aes(x=value, y=pred), linewidth = 0.8) +
-    geom_text(aes(x = Inf, y = Inf, label = paste("Adj-R² = ", round(Adj.Rsq, 2))), 
+    geom_text(aes(x = Inf, y = Inf, label = paste("R² = ", round(Rsq, 2))), 
               hjust = 1.2, vjust = 2, size = 4, fontface = "italic", color = "black") +
     ggtitle(title)
   
@@ -60,5 +53,5 @@ generate_PKPD_plots <- function(obs_data, pred_data, title, filename) {
   }
   
   # Save the plot
-  ggsave(file.path(getwd(), "results", filename), width = 12, height = 5, units = "in", dpi = 600)
+  ggsave(file.path(getwd(), "results", filename), width = 12, height = 3, units = "in", dpi = 1200)
 }

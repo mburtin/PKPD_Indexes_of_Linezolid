@@ -1,8 +1,8 @@
-# Record execution time using tictoc for more precise timing
+# Record execution time
 library(tictoc)
 tic()
 
-# Check depencies
+# Check depencies and load them if necessary
 require(mrgsolve)       # Simulation package
 require(dplyr)          # Data manipulation
 require(tidyr)          # Data manipulation
@@ -11,7 +11,7 @@ require(tibble)         # Data manipulation
 require(future)         # Multithreading
 require(future.apply)   # Multithreading
 require(ggplot2)        # Plotting
-require(ggh4x)          # Plotting (allow to set custom scales for each facet)
+require(ggh4x)          # Plotting (allow to set custom scales for each facet - here each PK/PD index)
 
 #############################################################################
 ###########                   MrgSolve Simulations                ###########                       
@@ -23,10 +23,10 @@ require(ggh4x)          # Plotting (allow to set custom scales for each facet)
 clean_sim_table <- function(df) { 
   df |>
     group_by(ID) |>
-    filter(!(time == 0 & duplicated(time))) |>
-    select(STRN, MIC, DoseGroup, ID, AMT, time, B0, Log10CFU_CENTRAL, Log10CFU_CSF, 
-           Cmax_CENTRAL, AUCCENTRAL, TOVER_MIC_CENTRAL, TOVER_4MIC_CENTRAL, TOVER_10MIC_CENTRAL, 
-           Cmax_CSF, AUCCSF, TOVER_MIC_CSF, TOVER_4MIC_CSF, TOVER_10MIC_CSF, C_CENTRAL, C_CSF) |>
+    filter(!(time == 0 & duplicated(time))) |> # MrgSolve doesn't allow to filter different EVID output, so we get by default two T0 (one for the dose administration and another for the first observation)
+    select(STRN, MIC, DoseGroup, ID, AMT, time, B0, Log10CFU_CSF, 
+           C_CENTRAL, Cmax_CENTRAL, AUCCENTRAL, TOVER_MIC_CENTRAL,
+           C_CSF, Cmax_CSF, AUCCSF, TOVER_MIC_CSF) |>
     ungroup()
 }
 
@@ -74,7 +74,7 @@ message(" - Fractioned doses... (1/3)")
 # Start multithreading session
 plan(multisession, workers = thread_number)
 
-# Multithreading loop, one threading do all simulations for one strain
+# Multithreading loop: one thread by strain 
 fractioned_results <- future_lapply(1:length(model_list), function(i) {
   result_list <- lapply(fractioned_daily_AMT, function(fractioned_daily_AMT_value) {
     simulate_fractioned_dose(i, fractioned_daily_AMT_value)
@@ -83,10 +83,10 @@ fractioned_results <- future_lapply(1:length(model_list), function(i) {
   do.call(rbind, result_list)
 }, future.seed = TRUE)
 
-# Given the strain name to each list elements
+# Give the proper strain name to each list elements
 names(fractioned_results) <- names(model_list)
 
-# Filter the results to keep only 24h values
+# Loop over all the list to only keep values at 24h
 fractioned_24h <- future_lapply(fractioned_results, function(df) {
   df[df$time == 24.0, ]
 })
@@ -94,7 +94,7 @@ fractioned_24h <- future_lapply(fractioned_results, function(df) {
 # Stop multithreading session
 plan(sequential)
 
-# Combine all fractioned results in one dataframe
+# Combine all fractioned dataframe in one
 fractioned_24h_full <- do.call(rbind, fractioned_24h)
 
 #######
@@ -213,30 +213,23 @@ sim_formated_data <- rbind(fractioned_24h_full, continuous_inf_24h, control_24h)
     CENTRAL_Cmax = Cmax_CENTRAL/MIC,
     CENTRAL_AUC_MIC = AUCCENTRAL/MIC,
     CENTRAL_ToverMIC = TOVER_MIC_CENTRAL/max(time)*100,
-    CENTRAL_ToverMIC_4X = TOVER_4MIC_CENTRAL/max(time)*100,
-    CENTRAL_ToverMIC_10X = TOVER_10MIC_CENTRAL/max(time)*100,
     CSF_Cmax = Cmax_CSF/MIC,
     CSF_AUC_MIC = AUCCSF/MIC,
-    CSF_ToverMIC = TOVER_MIC_CSF/max(time)*100,
-    CSF_ToverMIC_4X = TOVER_4MIC_CSF/max(time)*100,
-    CSF_ToverMIC_10X = TOVER_10MIC_CSF/max(time)*100
+    CSF_ToverMIC = TOVER_MIC_CSF/max(time)*100
   ) |>
   pivot_longer(
-    cols = c(CENTRAL_Cmax, CENTRAL_AUC_MIC, CENTRAL_ToverMIC, CENTRAL_ToverMIC_4X, CENTRAL_ToverMIC_10X,
-             CSF_Cmax, CSF_AUC_MIC, CSF_ToverMIC, CSF_ToverMIC_4X, CSF_ToverMIC_10X),
+    cols = c(CENTRAL_Cmax, CENTRAL_AUC_MIC, CENTRAL_ToverMIC,
+             CSF_Cmax, CSF_AUC_MIC, CSF_ToverMIC),
     names_to = "PKPD_Index",
     values_to = "value"
   ) |>
-  select(-c(Cmax_CENTRAL, AUCCENTRAL, TOVER_MIC_CENTRAL, TOVER_4MIC_CENTRAL, TOVER_10MIC_CENTRAL,
-            Cmax_CSF, AUCCSF, TOVER_MIC_CSF, TOVER_4MIC_CSF, TOVER_10MIC_CSF)) |>
+  select(-c(Cmax_CENTRAL, AUCCENTRAL, TOVER_MIC_CENTRAL,
+            Cmax_CSF, AUCCSF, TOVER_MIC_CSF)) |>
   ungroup()
 
 # Split sim_formated_data for each target, and reorder columns
-csf_sim_data <- sim_formated_data |> rename("Log10CFU" = Log10CFU_CSF) |> filter(PKPD_Index %in% c("CSF_Cmax", "CSF_AUC_MIC", "CSF_ToverMIC", "CSF_ToverMIC_4X", "CSF_ToverMIC_10X"))
-
-plasma_sim_data <- sim_formated_data |> rename("Log10CFU" = Log10CFU_CENTRAL) |> filter(PKPD_Index %in% c("CENTRAL_Cmax", "CENTRAL_AUC_MIC", "CENTRAL_ToverMIC", "CENTRAL_ToverMIC_4X", "CENTRAL_ToverMIC_10X"))
-
-mix_sim_data <- sim_formated_data |> rename("Log10CFU" = Log10CFU_CSF) |> filter(PKPD_Index %in% c("CENTRAL_Cmax", "CENTRAL_AUC_MIC", "CENTRAL_ToverMIC", "CENTRAL_ToverMIC_4X", "CENTRAL_ToverMIC_10X"))
+csf_sim_data <- sim_formated_data |> rename("Log10CFU" = Log10CFU_CSF) |> filter(PKPD_Index %in% c("CSF_Cmax", "CSF_AUC_MIC", "CSF_ToverMIC"))
+mix_sim_data <- sim_formated_data |> rename("Log10CFU" = Log10CFU_CSF) |> filter(PKPD_Index %in% c("CENTRAL_Cmax", "CENTRAL_AUC_MIC", "CENTRAL_ToverMIC"))
 
 #############################################################################
 ###########          Estimation of correlation parameters         ###########                       
@@ -259,8 +252,6 @@ generate_PKPD_fit_data <- function(corrData) {
       PKPD_Index %in% c("CENTRAL_Cmax", "CSF_Cmax") ~ "I1_Cmax",
       PKPD_Index %in% c("CENTRAL_AUC_MIC", "CSF_AUC_MIC") ~ "I2_AUC",
       PKPD_Index %in% c("CENTRAL_ToverMIC", "CSF_ToverMIC") ~ "I3_ToverMIC",
-      PKPD_Index %in% c("CENTRAL_ToverMIC_4X", "CSF_ToverMIC_4X") ~ "I4_ToverMIC_4X",
-      PKPD_Index %in% c("CENTRAL_ToverMIC_10X", "CSF_ToverMIC_10X") ~ "I5_ToverMIC_10X",
       TRUE ~ PKPD_Index
     ))
   
@@ -270,15 +261,11 @@ generate_PKPD_fit_data <- function(corrData) {
 # Print progress messages in the console
 message("Estimate correlation parameters:")
 
-message(" - Plasma... (1/3)")
-plasma_corrCurve_data <- index_PKPD_fit_curve(plasma_sim_data)
-plasma_sim_data <- generate_PKPD_fit_data(plasma_corrCurve_data)
-
-message(" - CSF... (2/3)")
+message(" - CSF... (1/2)")
 csf_corrCurve_data <- index_PKPD_fit_curve(csf_sim_data)
 csf_sim_data <- generate_PKPD_fit_data(csf_corrCurve_data)
 
-message(" - CSF with Plasma indexes... (3/3)")
+message(" - CSF with Plasma indexes... (2/2)")
 mix_corrCurve_data <- index_PKPD_fit_curve(mix_sim_data)
 mix_sim_data <- generate_PKPD_fit_data(mix_corrCurve_data)
 
@@ -302,16 +289,13 @@ generate_pred_data <- function(data) {
       PKPD_Index %in% c("CENTRAL_Cmax", "CSF_Cmax") ~ "I1_Cmax",
       PKPD_Index %in% c("CENTRAL_AUC_MIC", "CSF_AUC_MIC") ~ "I2_AUC",
       PKPD_Index %in% c("CENTRAL_ToverMIC", "CSF_ToverMIC") ~ "I3_ToverMIC",
-      PKPD_Index %in% c("CENTRAL_ToverMIC_4X", "CSF_ToverMIC_4X") ~ "I4_ToverMIC_4X",
-      PKPD_Index %in% c("CENTRAL_ToverMIC_10X", "CSF_ToverMIC_10X") ~ "I5_ToverMIC_10X",
       TRUE ~ PKPD_Index
-    )) |> filter(!((PKPD_Index %in% c("I3_ToverMIC", "I4_ToverMIC_4X", "I5_ToverMIC_10X")) & value > 100))
+    )) |> filter(!((PKPD_Index %in% c("I3_ToverMIC")) & value > 100))
   
   return(pred_data)
 }
 
 csf_pred_data <- generate_pred_data(csf_corrCurve_data)
-plasma_pred_data <- generate_pred_data(plasma_corrCurve_data)
 mix_pred_data <- generate_pred_data(mix_corrCurve_data)
 
 #############################################################################
@@ -319,15 +303,6 @@ mix_pred_data <- generate_pred_data(mix_corrCurve_data)
 #############################################################################
 
 csf_obs_mean <- csf_sim_data |>
-  group_by(STRN, MIC, DoseGroup, AMT, time, B0, PKPD_Index) |>
-  summarize( 
-    value = mean(value),
-    deltaLog10CFU = mean(deltaLog10CFU),
-    Rsq = mean(Rsq),
-    Adj.Rsq = mean(Adj.Rsq)
-  )
-
-plasma_obs_mean <- plasma_sim_data |>
   group_by(STRN, MIC, DoseGroup, AMT, time, B0, PKPD_Index) |>
   summarize( 
     value = mean(value),
@@ -367,13 +342,6 @@ csf_data <- list(
   obs_mean = csf_obs_mean
 )
 
-plasma_data <- list(
-  sim_data = plasma_sim_data,
-  correlation_data = plasma_corrCurve_data,
-  pred_data = plasma_pred_data,
-  obs_mean = plasma_obs_mean
-)
-
 csf_with_plasma_index_data <- list(
   sim_data = mix_sim_data,
   correlation_data = mix_corrCurve_data,
@@ -389,10 +357,10 @@ message("Total execution time: ", round(elapsed$toc - elapsed$tic, 2), " seconds
 rm(fractioned_results, fractioned_24h, fractioned_24h_full, 
    continuous_inf_results, continuous_inf_24h, continuous_inf_amt, 
    control_results, control_24h, i_data, 
-   csf_sim_data, plasma_sim_data, mix_sim_data,
-   csf_pred_data, plasma_pred_data, mix_pred_data,
-   csf_obs_mean, plasma_obs_mean, mix_obs_mean,
-   csf_corrCurve_data, plasma_corrCurve_data, mix_corrCurve_data,
+   csf_sim_data, mix_sim_data,
+   csf_pred_data, mix_pred_data,
+   csf_obs_mean, mix_obs_mean,
+   csf_corrCurve_data, mix_corrCurve_data,
    model_file, model_list, elapsed)
 
 gc()
