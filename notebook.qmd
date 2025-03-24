@@ -1,5 +1,7 @@
 ---
 title: "Study of PK/PD Index for Linezolid specific to CSF infections"
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## Settings & Dependencies
@@ -186,6 +188,46 @@ mix_efficacity = csf_with_plasma_index_data[["correlation_data"]] |>
                      )})) |>
   pivot_wider(names_from = PKPD_Index, values_from = TargetIndexValue)
 )
+
+# Resume the patient proportion reaching effect targets
+Effect_summary <- list(
+  
+  global_proportion = csf_data[["sim_data"]] |>
+  ungroup() |>
+  summarise(
+    Stasis_percentage = sum(deltaLog10CFU <= 0)/n() * 100,
+    Log1Kill_percentage = sum(deltaLog10CFU <= -1)/n() * 100,
+    Log2Kill_percentage = sum(deltaLog10CFU <= -2)/n() * 100
+  ),
+  
+  proportion_by_DoseGroup = csf_data[["sim_data"]] |>
+  ungroup() |>
+  group_by(DoseGroup) |>
+  summarise(
+    Stasis_percentage = sum(deltaLog10CFU <= 0)/n() * 100,
+    Log1Kill_percentage = sum(deltaLog10CFU <= -1)/n() * 100,
+    Log2Kill_percentage = sum(deltaLog10CFU <= -2)/n() * 100,
+  ) |> filter(DoseGroup != "control"),
+  
+  proportion_by_AMT = csf_data[["sim_data"]] |>
+  ungroup() |>
+  group_by(AMT) |>
+  summarise(
+    Stasis_percentage = sum(deltaLog10CFU <= 0)/n() * 100,
+    Log1Kill_percentage = sum(deltaLog10CFU <= -1)/n() * 100,
+    Log2Kill_percentage = sum(deltaLog10CFU <= -2)/n() * 100,
+  ),
+  
+  proportion_by_AMT_and_DG = csf_data[["sim_data"]] |>
+  filter(DoseGroup != "continuous_infusion") |>
+  ungroup() |>
+  group_by(DoseGroup, AMT) |>
+  summarise(
+    Stasis_percentage = sum(deltaLog10CFU <= 0)/n() * 100,
+    Log1Kill_percentage = sum(deltaLog10CFU <= -1)/n() * 100,
+    Log2Kill_percentage = sum(deltaLog10CFU <= -2)/n() * 100,
+  )
+)
 ```
 
 The bloc below was used to generate comparison plots between the proportion of patient reaching the PKPD targets and the proportion of patients reaching a specific effect for 600mg.
@@ -219,4 +261,89 @@ csf_plot + csf_plot2 + plot_layout(nrow = 2, guides = 'collect') +
 
 ggsave(file.path(getwd(), "results", "600m_atteignment.png"), width = 8, height = 4, dpi = 1200)
 
+```
+
+## PK & PD Analysis
+```{r}
+## Summarize data
+summary_fractioned <- sim_results_fractioned$fractioned_results$SA07982 |>
+  group_by(DoseGroup, AMT, time) |>
+  summarize(
+    C_CENTRAL = mean(C_CENTRAL),
+    C_CSF = mean(C_CSF),
+    Log10CFU = mean(Log10CFU_CSF)
+    )
+
+summary_continuous_inf <- sim_results_continuous_inf$continuous_inf_results |>
+  group_by(AMT, time) |>
+  summarize(
+    C_CENTRAL = mean(C_CENTRAL),
+    C_CSF = mean(C_CSF),
+    Log10CFU = mean(Log10CFU_CSF)
+    )
+
+## PK plots
+### Plasma PK for fractioned doses
+summary_fractioned |>
+  filter(AMT != 0) |>
+  ggplot(aes(x = time, y = C_CENTRAL, color = as.factor(DoseGroup))) +
+  geom_line() +
+  facet_wrap(~AMT, ncol = 3, scales = "free_y") +
+  labs(
+    x = "Time (h)", 
+    y = "Linezolid concentrations (mg/L)", 
+    title = "Plasmatic PK of Linezolid for each dose amount",
+    color = "Dose regimens"
+  ) +
+  scale_x_continuous(breaks = seq(0, 24, 4))
+### CSF PK for fractioned doses
+summary_fractioned |>
+  filter(AMT != 0) |>
+  ggplot(aes(x = time, y = C_CSF, color = as.factor(DoseGroup))) +
+  geom_line() +
+  facet_wrap(~AMT, ncol = 3, scales = "free_y") +
+  labs(
+    x = "Time (h)", 
+    y = "Linezolid concentrations (mg/L)", 
+    title = "Plasmatic PK of Linezolid for each dose amount",
+    color = "Dose regimens"
+  ) +
+  scale_x_continuous(breaks = seq(0, 24, 4))
+### Plasma PK for continuous infusion
+summary_continuous_inf |>
+  filter(AMT != 0) |>
+  ggplot(aes(x = time, y = C_CENTRAL, color = as.factor(AMT))) +
+  geom_line() +
+  labs(
+    x = "Time (h)", 
+    y = "Linezolid concentrations (mg/L)", 
+    title = "Plasmatic PK of Linezolid for each dose amount",
+    color = "Dose regimens"
+  ) +
+  scale_x_continuous(breaks = seq(0, 24, 4))
+### CSF PK for continuous infusion
+summary_continuous_inf |>
+  filter(AMT != 0) |>
+  ggplot(aes(x = time, y = C_CSF, color = as.factor(AMT))) +
+  geom_line() +
+  labs(
+    x = "Time (h)", 
+    y = "Linezolid concentrations (mg/L)", 
+    title = "Plasmatic PK of Linezolid for each dose amount",
+    color = "Dose regimens"
+  ) +
+  scale_x_continuous(breaks = seq(0, 24, 4))
+### PD for fractioned doses
+summary_fractioned |>
+  filter(AMT != 0) |>
+  ggplot(aes(x = time, y = Log10CFU, color = as.factor(DoseGroup))) +
+  geom_line() +
+  facet_wrap(~AMT, ncol = 3, scales = "free_y") +
+  labs(
+    x = "Time (h)", 
+    y = "Linezolid concentrations (mg/L)", 
+    title = "Plasmatic PK of Linezolid for each dose amount",
+    color = "Dose regimens"
+  ) +
+  scale_x_continuous(breaks = seq(0, 24, 4))
 ```
