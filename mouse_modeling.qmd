@@ -1,0 +1,152 @@
+---
+title: "XXXX"
+author: Michael BURTIN
+format: html
+editor: source
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| echo: false
+#| include: false
+
+####
+## Load depencies
+####
+library(mrgsolve)       # Simulation package
+library(tidyverse)
+
+# If doesn't exist, create a folder for plots
+if (!dir.exists("results")) {
+  dir.create("results")
+}
+
+bigelow_10mg <- read_csv("data/bigelow_10mg_pk.csv") |> mutate(ID = 10)
+bigelow_30mg <- read_csv("data/bigelow_30mg_pk.csv") |> mutate(ID = 30)
+bigelow_100mg <- read_csv("data/bigelow_100mg_pk.csv") |> mutate(ID = 100)
+bigelow_335mg <- read_csv("data/bigelow_335mg_pk.csv") |> mutate(ID = 335)
+
+bigelow_full <- rbind(bigelow_10mg, bigelow_30mg, bigelow_100mg, bigelow_335mg)
+```
+
+Bioavailibility analysis
+```{r}
+# Determine a Michael model for F
+f_calculation_df <- tibble(f = c(0.184, 0.233, 1, 1),
+                           dose = c(10, 30, 100, 335))
+
+# fit nls model of f_calculation_df with f in y and dose in x, and a michaelis menten mode
+library(minpack.lm)
+bioavailibility_model_01 <- nlsLM(f ~ Vmax * dose / (Km + dose), data = f_calculation_df, start = list(Vmax = 1, Km = 1))
+
+## Result: Vmax = 1.290687 & Km = 63.448978
+
+# another fit nls with Vmax between [0;1]
+bioavailibility_model_02 <- nlsLM(f ~ Vmax * dose / (Km + dose), 
+                                data = f_calculation_df, 
+                                start = list(Vmax = 0.5, Km = 1), 
+                                lower = c(Vmax = 0, Km = 0), 
+                                upper = c(Vmax = 1, Km = Inf))
+
+# Result: Vmax = 1.0 & Km = 36.12112
+```
+
+# Bigelow PK
+```{r}
+# Load the model
+mouse_model <- mread("model/Mouse_model_bigelow")
+
+## Bigelow results (PK)
+ev01 <- ev(ID = 335, amt = 335, cmt = "A")
+ev02 <- ev(ID = 100, amt = 100, cmt = "A")
+ev03 <- ev(ID = 30, amt = 30, cmt = "A")
+ev04 <- ev(ID = 10, amt = 10, cmt = "A")
+
+dose_list <- rbind(ev01@data, ev02@data, ev03@data, ev04@data)
+
+mouse_sim_01 <- mouse_model |>
+    mrgsolve::data_set(dose_list) |>
+    mrgsolve::mrgsim(delta = 0.1, end = 24) |>
+    tibble::as_tibble()
+
+## GGplot of test with time in x and C_CENTRAL in y, and color by ID
+ggplot() +
+    geom_line(data = mouse_sim_01, aes(x = time, y = C_CENTRAL, color = factor(ID))) +
+    geom_line(data = bigelow_full, aes(x = x, y = y, color = factor(ID)), linetype = "dashed") +
+    labs(title = "Plasmatic concentration of Linezolid in mouse",
+         x = "Time (h)",
+         y = "Concentration (mg/L)",
+         color = "ID") +
+    scale_color_manual(values = c("335" = "purple", "100" = "cyan", "30" = "green4", "10" = "orange"), 
+                       labels = c("335" = "335 mg/kg", "100" = "100 mg/kg", "30" = "30 mg/kg", "10" = "10 mg/kg")) +
+    scale_y_continuous(breaks = c(0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000), limits = c(0.0001, 1000), trans = "log10", 
+                       labels = c("0.0001", "0.001", "0.01", "0.1", "1", "10",  "100", "1000")) +
+    scale_x_continuous(breaks = seq(0, 24, 4)) +
+    theme_minimal()
+
+```
+
+# Andes PK
+```{r}
+library(mrgsolve)       # Simulation package
+library(tidyverse)
+
+## Andes results (PK)
+mouse_model <- mread("model/Mouse_model_partial_andes")
+
+andes_data <- read_csv("data/andes_pk.csv")
+
+ev05 <- ev(ID = 80, amt = 80, cmt ="A")
+ev06 <- ev(ID = 20, amt = 20, cmt = "A")
+andes_dose <- rbind(ev05@data, ev06@data)
+
+mouse_sim_02 <- mouse_model |>
+    mrgsolve::data_set(andes_dose) |>
+    mrgsolve::mrgsim(delta = 0.1, end = 24) |>
+    tibble::as_tibble()
+
+ggplot() +
+    geom_line(data = mouse_sim_02, aes(x = time, y = C_CENTRAL, color = factor(ID))) +
+    geom_line(data = andes_data, aes(x = x, y = y, color = factor(ID)), linetype = "dashed") +
+    geom_point(data = andes_data, aes(x = x, y = y, color = factor(ID))) +
+    scale_y_continuous(limits = c(0, 80), breaks = seq(0, 80, 10)) +
+    scale_x_continuous(limits = c(0, 3)) +
+    labs(title = "Plasmatic concentration of Linezolid in mouse - D. Andes comparaison",
+         x = "Time (h)",
+         y = "Concentration (mg/L)",
+         color = "Dose") +
+    theme_minimal()
+
+```
+
+```{r}
+mouse_model <- mread("model/Mouse_model_full")
+andes_data <- read_csv("data/andes_pk.csv")
+
+ev05 <- ev(ID = 80, amt = 80, cmt ="A")
+ev06 <- ev(ID = 20, amt = 20, cmt = "A")
+andes_dose <- rbind(ev05@data, ev06@data)
+
+mouse_sim_02 <- mouse_model |>
+    mrgsolve::data_set(andes_dose) |>
+    mrgsolve::mrgsim(delta = 0.1, end = 24) |>
+    tibble::as_tibble()
+
+ggplot() +
+    geom_line(data = mouse_sim_02, aes(x = time, y = C_CENTRAL, color = factor(ID))) +
+    geom_line(data = andes_data, aes(x = x, y = y, color = factor(ID)), linetype = "dashed") +
+    geom_point(data = andes_data, aes(x = x, y = y, color = factor(ID))) +
+    scale_y_continuous(limits = c(0, 80), breaks = seq(0, 80, 10)) +
+    scale_x_continuous(limits = c(0, 3)) +
+    labs(title = "Plasmatic concentration of Linezolid in mouse - D. Andes comparaison",
+         x = "Time (h)",
+         y = "Concentration (mg/L)",
+         color = "Dose") +
+    theme_minimal()
+
+ggplot() +
+  geom_smooth(data = mouse_sim_02, aes(x = time, y = DeltaLog_CFU, color = factor(ID)), method = "loess", se = FALSE) +
+  theme_minimal()
+
+```
