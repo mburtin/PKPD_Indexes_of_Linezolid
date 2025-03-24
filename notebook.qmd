@@ -96,6 +96,46 @@ mix_plot <- PKPD_index_plots(obs_data = csf_with_plasma_index_data[["obs_mean"]]
                              file_name = "Plasma-derived PKPD Index for Linezolid.png")
 ```
 
+## VPCs Plots generation
+
+The code below will generate VPCs plots for fCmax/MIC, fAUC/MIC and fT>MIC for CSF.
+
+```{r}
+## Execute VPC scripts
+source("RScripts/vpc_script.R")
+source("RScripts/vpc_plots_script.R")
+
+## Allow to setup quickly wich VPC data you want to generate
+bin_data = csf_vpc_data
+
+## Generate VPC binned data
+binned_data <- list(
+  cmax_obs = bin_data$obs_data |>
+  filter(PKPD_Index == "I1_Cmax") |>
+  ntile_obs_bins(20),
+
+  cmax_sim = bin_data$cmax_sim |>
+    ntile_sim_bins(20),
+  
+  auc_obs = bin_data$obs_data |> 
+    filter(PKPD_Index == "I2_AUC") |>
+    ntile_obs_bins(20),
+  
+  auc_sim = bin_data$auc_sim |>
+    ntile_sim_bins(20),
+  
+  tmic_obs = bin_data$obs_data |>
+    filter(PKPD_Index == "I3_ToverMIC") |>
+    cut_obs_bins(0, 100, 20),
+  
+  tmic_sim = bin_data$tmic_sim |>
+    cut_sim_bins(0, 100, 20)
+)
+
+## Generate VPC plots
+VPC_Plots(binned_data, "VPC - CSF.png")
+```
+
 ## Target estimations for each indexes
 
 The bloc below will generate a table with different PK/PD targets for bacteriostasis, 1-log kill, and 2-log kill effect.

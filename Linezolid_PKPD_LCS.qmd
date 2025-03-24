@@ -402,6 +402,15 @@ tmic_obs <- bin_data$obs_data |>
 
 tmic_sim <- bin_data$tmic_sim |>
   cut_sim_bins(0, 100, 20)
+
+binned_data <- list(
+  cmax_obs = cmax_obs,
+  cmax_sim = cmax_sim,
+  auc_obs = auc_obs,
+  auc_sim = auc_sim,
+  tmic_obs = tmic_obs,
+  tmic_sim = tmic_sim
+)
 ```
 
 ```{r}
