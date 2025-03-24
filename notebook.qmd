@@ -264,6 +264,7 @@ ggsave(file.path(getwd(), "results", "600m_atteignment.png"), width = 8, height 
 ```
 
 ## PK & PD Analysis
+
 ```{r}
 ## Summarize data
 summary_fractioned <- sim_results_fractioned$fractioned_results$SA07982 |>
