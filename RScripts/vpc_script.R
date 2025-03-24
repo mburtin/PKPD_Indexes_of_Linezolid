@@ -141,25 +141,3 @@ csf_vpc_with_plasma_index_data <- list(
 )
 
 gc()
-
-## Generate the VPC data binned
-cmax_obs <- bin_data$obs_data |>
-  filter(PKPD_Index == "I1_Cmax") |>
-  ntile_obs_bins(20)
-
-cmax_sim <- bin_data$cmax_sim |>
-  ntile_sim_bins(20)
-
-auc_obs <- bin_data$obs_data |> 
-  filter(PKPD_Index == "I2_AUC") |>
-  ntile_obs_bins(20)
-
-auc_sim <- bin_data$auc_sim |>
-  ntile_sim_bins(20)
-
-tmic_obs <- bin_data$obs_data |>
-  filter(PKPD_Index == "I3_ToverMIC") |>
-  cut_obs_bins(0, 100, 20)
-
-tmic_sim <- bin_data$tmic_sim |>
-  cut_sim_bins(0, 100, 20)
