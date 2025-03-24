@@ -108,7 +108,7 @@ source("RScripts/vpc_script.R")
 source("RScripts/vpc_plots_script.R")
 
 ## Allow to setup quickly wich VPC data you want to generate
-bin_data = csf_vpc_data
+bin_data = csf_vpc_with_plasma_index_data
 
 ## Generate VPC binned data
 binned_data <- list(
@@ -135,7 +135,7 @@ binned_data <- list(
 )
 
 ## Generate VPC plots
-VPC_Plots(binned_data, "VPC - CSF.png")
+VPC_Plots(binned_data, "VPC - CSF with plasma indices.png")
 ```
 
 ## Target estimations for each indexes
@@ -235,14 +235,14 @@ The bloc below was used to generate comparison plots between the proportion of p
 ```{r}
 source("RScripts/pkpd_index_plots_script_02.R")
 
+## 600mg for a bacteriostatic effect (fAUC/MIC target = 30 & fT>MIC target = 63%)
 csf_plot <- PKPD_target_plots_600mg(obs_data = csf_data[["sim_data"]] |> 
                                   filter(DoseGroup == "fractioned_12h" & AMT == 1200), 
                                 pred_data = csf_data[["pred_data"]],
                                 effect = 0,
                                 auc_target = 30,
                                 tmic_target = 63,
-                                title = "LNZ PKPD Index for CSF" ,
-                                filename = "LNZ PKPD Indexes for CSF target.png")
+                                title = "LNZ PKPD Index for CSF")
 
 csf_plot2 <- PKPD_effect_plots_600mg(obs_data = csf_data[["sim_data"]] |> 
                                   filter(DoseGroup == "fractioned_12h" & AMT == 1200), 
@@ -250,8 +250,7 @@ csf_plot2 <- PKPD_effect_plots_600mg(obs_data = csf_data[["sim_data"]] |>
                                 auc_target = 30,
                                 tmic_target = 63,
                                 pred_data = csf_data[["pred_data"]], 
-                                title = "LNZ PKPD Index for CSF" ,
-                                filename = "LNZ PKPD Indexes for CSF target.png")
+                                title = "LNZ PKPD Index for CSF")
 
 csf_plot + csf_plot2 + plot_layout(nrow = 2, guides = 'collect') +
   plot_annotation(
@@ -259,7 +258,32 @@ csf_plot + csf_plot2 + plot_layout(nrow = 2, guides = 'collect') +
       plot.margin = margin(t = 20, r = 40, b = 20, l = 40), 
     ))
 
-ggsave(file.path(getwd(), "results", "600m_atteignment.png"), width = 8, height = 4, dpi = 1200)
+ggsave(file.path(getwd(), "results", "600mg_atteignment - bacteriostasis.png"), width = 8, height = 4, dpi = 1200)
+
+## 600mg for a bacteriostatic effect (fAUC/MIC target = 30 & fT>MIC target = 63%)
+csf_plot3 <- PKPD_target_plots_600mg(obs_data = csf_data[["sim_data"]] |> 
+                                  filter(DoseGroup == "fractioned_12h" & AMT == 1200), 
+                                pred_data = csf_data[["pred_data"]],
+                                effect = -2,
+                                auc_target = 73,
+                                tmic_target = 91,
+                                title = "LNZ PKPD Index for CSF")
+
+csf_plot4 <- PKPD_effect_plots_600mg(obs_data = csf_data[["sim_data"]] |> 
+                                  filter(DoseGroup == "fractioned_12h" & AMT == 1200), 
+                                effect = -2,
+                                auc_target = 73,
+                                tmic_target = 91,
+                                pred_data = csf_data[["pred_data"]], 
+                                title = "LNZ PKPD Index for CSF")
+
+csf_plot3 + csf_plot4 + plot_layout(nrow = 2, guides = 'collect') +
+  plot_annotation(
+    theme = theme(
+      plot.margin = margin(t = 20, r = 40, b = 20, l = 40), 
+    ))
+
+ggsave(file.path(getwd(), "results", "600mg_atteignment - bactericidal.png"), width = 8, height = 4, dpi = 1200)
 
 ```
 

@@ -1,15 +1,15 @@
 require(patchwork)
 
-PKPD_target_plots_600mg <- function(obs_data, pred_data, effect, auc_target, tmic_target, title, filename) {
+PKPD_target_plots_600mg <- function(obs_data, pred_data, effect, auc_target, tmic_target, title) {
   # Check if library are loaded
   require(ggplot2)        # Plotting
   require(ggh4x)          # Plotting (allow to set custom scales for each facet)
   
   # Generate the plot
   ggplot(obs_data |> filter(PKPD_Index %in% c("I2_AUC", "I3_ToverMIC")), aes(x=value, y=deltaLog10CFU)) +
-    geom_point(size=0.25) +
-    geom_point(data = obs_data |> filter(PKPD_Index == "I2_AUC") |> filter(value >= auc_target), size=0.25, color = "blue") +
-    geom_point(data = obs_data |> filter(PKPD_Index == "I3_ToverMIC") |> filter(value >= tmic_target), size=0.25, color = "blue") +
+    geom_point(size = 0.25) +
+    geom_point(data = obs_data |> filter(PKPD_Index == "I2_AUC") |> filter(value >= auc_target), size = 0.1, color = "blue") +
+    geom_point(data = obs_data |> filter(PKPD_Index == "I3_ToverMIC") |> filter(value >= tmic_target), size = 0.1, color = "blue") +
     facet_wrap(~ PKPD_Index, scales = "free_x", strip.position = "bottom", nrow = 1, 
                labeller = labeller(
                  PKPD_Index = c(
@@ -50,16 +50,16 @@ PKPD_target_plots_600mg <- function(obs_data, pred_data, effect, auc_target, tmi
 }
 
 
-PKPD_effect_plots_600mg <- function(obs_data, pred_data, effect, auc_target, tmic_target, title, filename) {
+PKPD_effect_plots_600mg <- function(obs_data, pred_data, effect, auc_target, tmic_target, title) {
   # Check if library are loaded
   require(ggplot2)        # Plotting
   require(ggh4x)          # Plotting (allow to set custom scales for each facet)
   
   # Generate the plot
   ggplot(obs_data |> filter(PKPD_Index %in% c("I2_AUC", "I3_ToverMIC")), aes(x=value, y=deltaLog10CFU)) +
-    geom_point(size=0.25) +
-    geom_point(data = obs_data |> filter(PKPD_Index == "I2_AUC") |> filter(deltaLog10CFU <= effect), size=0.25, color = "orange") +
-    geom_point(data = obs_data |> filter(PKPD_Index == "I3_ToverMIC") |> filter(deltaLog10CFU <= effect), size=0.25, color = "orange") +
+    geom_point(size = 0.1) +
+    geom_point(data = obs_data |> filter(PKPD_Index == "I2_AUC") |> filter(deltaLog10CFU <= effect), size = 0.1, color = "orange") +
+    geom_point(data = obs_data |> filter(PKPD_Index == "I3_ToverMIC") |> filter(deltaLog10CFU <= effect), size = 0.1, color = "orange") +
     facet_wrap(~ PKPD_Index, scales = "free_x", strip.position = "bottom", nrow = 1, 
                labeller = labeller(
                  PKPD_Index = c(
