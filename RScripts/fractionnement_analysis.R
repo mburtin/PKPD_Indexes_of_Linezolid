@@ -37,6 +37,12 @@ corr_q8_data = q8h_corrCruve |> filter(PKPD_Index == "I2_AUC")
 pred_q4_data = q4h_pred_data |> filter(PKPD_Index == "I2_AUC")
 corr_q4_data = q4h_corrCruve |> filter(PKPD_Index == "I2_AUC")
 
+#scale_x_continuous(
+#  limits = c(0, 100),
+#  breaks = c(0, 25, 50, 75, 100),
+#  name = expression(T['>MIC']~'(%)')
+#)
+
 ## AUC
 p1 <- ggplot() +
   scale_x_continuous(limits = c(1, 1000), 
