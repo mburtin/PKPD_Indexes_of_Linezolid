@@ -27,7 +27,7 @@ if (!dir.exists("results")) {
 }
 
 # Load the model
-model_file <- mread("model/Linezolid_PKPD_model")
+model_file <- mread("model/Linezolid_PKPD_model_old")
 
 ####
 ## Specify your entries
