@@ -288,63 +288,63 @@ summary_continuous_inf <- sim_results_continuous_inf$continuous_inf_results |>
 summary_fractioned |>
   filter(AMT != 0) |>
   ggplot(aes(x = time, y = C_CENTRAL, color = as.factor(DoseGroup))) +
-  geom_line() +
+  geom_line(linewidth = 0.75) +
   facet_wrap(~AMT, ncol = 3, scales = "free_y") +
   labs(
     x = "Time (h)", 
     y = "Linezolid concentrations (mg/L)", 
-    title = "Plasmatic PK of Linezolid for each dose amount",
-    color = "Dose regimens"
+    title = "Plasma PK of Linezolid for q24h, q12h, q8h, q4h",
+    color = "Dosing regimens"
   ) +
   scale_x_continuous(breaks = seq(0, 24, 4))
 ### CSF PK for fractioned doses
 summary_fractioned |>
   filter(AMT != 0) |>
   ggplot(aes(x = time, y = C_CSF, color = as.factor(DoseGroup))) +
-  geom_line() +
+  geom_line(linewidth = 0.75) +
   facet_wrap(~AMT, ncol = 3, scales = "free_y") +
   labs(
     x = "Time (h)", 
     y = "Linezolid concentrations (mg/L)", 
-    title = "Plasmatic PK of Linezolid for each dose amount",
-    color = "Dose regimens"
+    title = "CSF PK of Linezolid for q24h, q12h, q8h, q4h",
+    color = "Dosing regimens"
   ) +
   scale_x_continuous(breaks = seq(0, 24, 4))
 ### Plasma PK for continuous infusion
 summary_continuous_inf |>
   filter(AMT != 0) |>
   ggplot(aes(x = time, y = C_CENTRAL, color = as.factor(AMT))) +
-  geom_line() +
+  geom_line(linewidth = 0.75) +
   labs(
     x = "Time (h)", 
     y = "Linezolid concentrations (mg/L)", 
-    title = "Plasmatic PK of Linezolid for each dose amount",
-    color = "Dose regimens"
+    title = "Plasma PK of Linezolid for each dose amount in continuous infusion",
+    color = "Dose amounts"
   ) +
   scale_x_continuous(breaks = seq(0, 24, 4))
 ### CSF PK for continuous infusion
 summary_continuous_inf |>
   filter(AMT != 0) |>
   ggplot(aes(x = time, y = C_CSF, color = as.factor(AMT))) +
-  geom_line() +
+  geom_line(linewidth = 0.75) +
   labs(
     x = "Time (h)", 
     y = "Linezolid concentrations (mg/L)", 
-    title = "Plasmatic PK of Linezolid for each dose amount",
-    color = "Dose regimens"
+    title = "CSF PK of Linezolid for each dose amount in continuous infusion",
+    color = "Dose amounts"
   ) +
   scale_x_continuous(breaks = seq(0, 24, 4))
 ### PD for fractioned doses
 summary_fractioned |>
   filter(AMT != 0) |>
   ggplot(aes(x = time, y = Log10CFU, color = as.factor(DoseGroup))) +
-  geom_line() +
+  geom_line(linewidth = 0.75) +
   facet_wrap(~AMT, ncol = 3, scales = "free_y") +
   labs(
     x = "Time (h)", 
     y = "Linezolid concentrations (mg/L)", 
-    title = "Plasmatic PK of Linezolid for each dose amount",
-    color = "Dose regimens"
+    title = "CSF PD of Linezolid for q24h, q12h, q8h, q4h",
+    color = "Dosing regimens"
   ) +
   scale_x_continuous(breaks = seq(0, 24, 4))
 ```
