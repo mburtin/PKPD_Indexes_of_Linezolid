@@ -3,14 +3,17 @@ Parameters are mostly fixed by using the Bigelow study values.
 We use this model to estimate an appropriate Ka and F
 
 [LONGITUDINAL]
-input={V1, V2, Q, Cl, Vm, Km, Ka, F}
+input={V1, V2, Q, Cl, Vm, Km, ka, F}
 
 PK:
 compartment(cmt = 1, volume = V1, concentration = Cc)
-absorption(cmt = 1, ka = Ka, p = F)
-;iv(cmt=1, Tlag=0.5, p=F)
+absorption(cmt=1, ka, p=F)
 elimination(cmt = 1, Cl)
-elimination(cmt = 1, Vm, Km) 
+elimination(cmt = 1, Vm, Km)
+
+compartment(cmt = 2, volume = V2, concentration = Cp)
+transfer(from = 1, to = 2, kt = Q)
+
 
 OUTPUT:
 output = {Cc}

@@ -1,0 +1,4 @@
+id,eta_V1_SAEM,eta_V2_SAEM,eta_Q_SAEM,eta_Cl_SAEM,eta_Vm_SAEM,eta_Km_SAEM,eta_ka_SAEM,eta_F_SAEM,eta_V1_mode,eta_V2_mode,eta_Q_mode,eta_Cl_mode,eta_Vm_mode,eta_Km_mode,eta_ka_mode,eta_F_mode
+800,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+400,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+200,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0

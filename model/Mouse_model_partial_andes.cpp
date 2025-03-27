@@ -19,7 +19,7 @@ Km     : 26.4   : Michaelis-Menten constant (mg/L)
 Kp     : 0.63  : Partition coefficient between plasma and muscle
 Q2     : 2.592 : Blood flow rate in muscle (L/h/kg)
 RBP    : 0.78  : Relative blood flow to the muscle
-Ka     : 4.23 : Absorption
+Ka     : 4.38 : Absorption
 
 ////////////////////////////////
 /// Compartments definition  ///
@@ -34,7 +34,7 @@ MUSCLE     : Muscle compartment with total drug amount (mg/h/kg)
 ///       Main function      ///
 ////////////////////////////////
 $MAIN
-F_A = 0.46;
+F_A = 0.4;
 
 //////////////////////////////
 ///  Equations definition  ///

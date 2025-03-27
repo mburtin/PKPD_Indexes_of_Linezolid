@@ -16,7 +16,7 @@ Q      : 0.504  : Blood flow rate (L/h/kg)
 CL     : 0.0649 : Clearance (L/h/kg)
 Vmax   : 3.26   : Maximum rate of metabolism (mg/h/kg)
 Km     : 26.4   : Michaelis-Menten constant (mg/L)
-Ka     : 4.23   : Absorption rate constant (h^-1)
+Ka     : 4.38   : Absorption rate constant (h^-1)
 Kp     : 0.63   : Partition coefficient between plasma and muscle
 Q2     : 2.592  : Blood flow rate in muscle (L/h/kg)
 RBP    : 0.78   : Concentration ratio blood/plasma in mouse
@@ -58,7 +58,7 @@ $GLOBAL
 double Cmax;
 
 $MAIN
-F_A = 0.46;
+F_A = 0.40;
 S_0 = pow(10, B0);
 
 if(TIME == 0.0) {
