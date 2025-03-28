@@ -93,10 +93,10 @@ mouse_model <- mread("model/Mouse_model_subcutenous")
 ev05 <- ev(ID = 800, amt = 80, cmt ="A")
 ev06 <- ev(ID = 400, amt = 40, cmt = "A")
 ev07 <- ev(ID = 200, amt = 20, cmt = "A")
-andes_dose <- rbind(ev05@data, ev06@data, ev07@data)
+subcut_dose <- rbind(ev05@data, ev06@data, ev07@data)
 
 mouse_sim_02 <- mouse_model |>
-    mrgsolve::data_set(andes_dose) |>
+    mrgsolve::data_set(subcut_dose) |>
     mrgsolve::mrgsim(delta = 0.1, end = 24) |>
     tibble::as_tibble()
 
@@ -106,7 +106,7 @@ ggplot() +
     geom_point(data = sandberg_data, aes(x = time, y = conc, color = factor(ID)), shape = 2) +
     scale_y_continuous(limits = c(0, 80), breaks = seq(0, 80, 10)) +
     scale_x_continuous(limits = c(0, 3)) +
-    labs(title = "Plasmatic concentration of Linezolid in mouse - D. Andes comparaison",
+    labs(title = "Plasmatic concentration of Linezolid in mouse - Sandberg comparaison",
          x = "Time (h)",
          y = "Concentration (mg/L)",
          color = "Dose") +
