@@ -22,16 +22,10 @@ if (!dir.exists("results")) {
   dir.create("results")
 }
 
-bigelow_10mg <- read_csv("data/bigelow_10mg_pk.csv") |> mutate(ID = 10)
-bigelow_30mg <- read_csv("data/bigelow_30mg_pk.csv") |> mutate(ID = 30)
-bigelow_100mg <- read_csv("data/bigelow_100mg_pk.csv") |> mutate(ID = 100)
-bigelow_335mg <- read_csv("data/bigelow_335mg_pk.csv") |> mutate(ID = 335)
-
-bigelow_full <- bind_rows(bigelow_10mg, bigelow_30mg, bigelow_100mg, bigelow_335mg) |>
-  rename(time = x, C_CENTRAL = y) |>
-  as_tibble()
-
-rm(bigelow_10mg, bigelow_30mg, bigelow_100mg, bigelow_335mg)
+# Load all differents PK studies results
+bigelow_data <- read_csv("data/bigelow_data_AIO.csv")
+sandberg_data <- read_csv("data/sandberg_data_AIO.csv")
+andes_data <- read_csv("data/andes_data_AIO.csv")
 ```
 
 Bioavailibility analysis
@@ -78,7 +72,7 @@ mouse_sim_01 <- mouse_model |>
 ## GGplot of test with time in x and C_CENTRAL in y, and color by ID
 ggplot() +
     geom_line(data = mouse_sim_01, aes(x = time, y = C_CENTRAL, color = factor(ID))) +
-    geom_line(data = bigelow_full, aes(x = time, y = C_CENTRAL, color = factor(ID)), linetype = "dashed") +
+    geom_line(data = bigelow_data, aes(x = time, y = conc, color = factor(ID)), linetype = "dashed") +
     labs(title = "Plasmatic concentration of Linezolid in mouse",
          x = "Time (h)",
          y = "Concentration (mg/L)",
@@ -94,13 +88,7 @@ ggplot() +
 
 # Andes PK
 ```{r}
-library(mrgsolve)       # Simulation package
-library(tidyverse)
-
-## Andes results (PK)
-mouse_model <- mread("model/Mouse_model_partial_andes")
-
-sandberg_data <- read_csv("data/sandberg_data_AIO.csv")
+mouse_model <- mread("model/Mouse_model_subcutenous")
 
 ev05 <- ev(ID = 800, amt = 80, cmt ="A")
 ev06 <- ev(ID = 400, amt = 40, cmt = "A")
