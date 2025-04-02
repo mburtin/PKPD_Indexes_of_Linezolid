@@ -43,19 +43,19 @@ ARoff     : Fictive adaptive resistance compartment for CSF
 ARon      : Fictive adaptive resistance compartment for CSF
 
 AUC_CENTRAL        : AUC of muscle concentrations (mg/L*h)
-TOVERMIC_CENTRAL   : Time over MIC in Muscle (h)
+TOVER_MIC_CENTRAL   : Time over MIC in Muscle (h)
 ////////////////////////////////
 ///       Main function      ///
 ////////////////////////////////
 $GLOBAL
-double Cmax;
+double Cmax_CENTRAL;
 
 $MAIN
 double CL  = PCL*exp(ECL);
 S_0 = pow(10, B0);
 
 if(TIME == 0.0) {
-  Cmax = 0;
+  Cmax_CENTRAL = 0;
 }
 
 //////////////////////////////
@@ -79,18 +79,20 @@ dxdt_ARoff  = -Kon*ARoff + Koff*ARon;
 dxdt_ARon   = -Koff*ARon + Kon*ARoff;
 
 // PKPD Indexes
-dxdt_AUC_CENTRAL = C_CENTRAL;
-dxdt_TOVERMIC_CENTRAL = (C_CENTRAL > MIC) ? 1 : 0;
+Cmax_CENTRAL          = (C_CENTRAL > Cmax_CENTRAL) ? C_CENTRAL : Cmax_CENTRAL;
+dxdt_AUC_CENTRAL      = C_CENTRAL;
+dxdt_TOVER_MIC_CENTRAL = (C_CENTRAL > MIC) ? 1 : 0;
 
 $TABLE
 double C_CENTRAL  = CENTRAL/V1;
-double DeltaLog_CFU = log10(S + Rp);
+double Log10CFU = log10(S + Rp);
 
 //////////////////////////////
 ///   Outputs definition   ///
 //////////////////////////////
 $CAPTURE @annotated
 C_CENTRAL     : Concentration in central compartment (mg/L)
-DeltaLog_CFU  : Variation of the bacterial count (log10, CFU/mL)
+Log10CFU      : Variation of the bacterial count (log10, CFU/mL)
+Cmax_CENTRAL  : Maximal concentration in central compartment (mg/L)
 MIC           : Minimal inhibitory concentration (mg/L)
 B0            : Initial bacterial count (log10(CFU/ml))
