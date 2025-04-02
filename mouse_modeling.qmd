@@ -88,7 +88,7 @@ ggplot() +
 
 # Andes PK
 ```{r}
-mouse_model <- mread("model/Mouse_model_full")
+mouse_model <- mread("model/Mouse_model_v2")
 
 ev05 <- ev(ID = 80, amt = 80, cmt ="A")
 ev06 <- ev(ID = 40, amt = 40, cmt = "A")
@@ -113,9 +113,5 @@ ggplot() +
          y = "Concentration (mg/L)",
          color = "Dose") +
     theme_minimal()
-
-```
-
-```{r}
 
 ```
