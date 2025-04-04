@@ -45,7 +45,7 @@ FU = 0.69
 # Specific model parameters for each strains
 model_list <- list(
     # S. Aureus
-    SA6538p = param(model_file, PCL=CL, B0 = 6.09, Bmax = 9.26, Kg = 1.09,
+    SA6538p = param(model_file, B0 = 6.09, Bmax = 9.26, Kg = 1.09,
                     Emax = 1.93, EC50 = 1.1, Kon = 0.016, MIC = 2.0)
 )
 
@@ -96,7 +96,7 @@ summary_fractioned |>
   labs(
     x = "Time (h)", 
     y = "Linezolid concentrations (mg/L)", 
-    title = "Plasma PK of Linezolid for q24h, q12h, q8h, q4h",
+    title = "Plasma PK of Linezolid in the mouse",
     color = "Dosing regimens"
   ) +
   scale_x_continuous(breaks = seq(0, 24, 4))
@@ -109,7 +109,7 @@ summary_fractioned |>
   labs(
     x = "Time (h)", 
     y = "Linezolid concentrations (mg/L)", 
-    title = "CSF PD of Linezolid for q24h, q12h, q8h, q4h",
+    title = "PD of Linezolid in the mouse",
     color = "Dosing regimens"
   ) +
   scale_x_continuous(breaks = seq(0, 24, 4))
