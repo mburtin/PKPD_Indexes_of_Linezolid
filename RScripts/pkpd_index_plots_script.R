@@ -41,8 +41,6 @@ PKPD_index_plots <- function(obs_data, pred_data, title, file_name) {
           strip.text.x = element_text(size = 12),
           axis.title.x = element_blank()
     ) +
-    geom_text(aes(x = Inf, y = Inf, label = paste("R² = ", round(Rsq, 2))), 
-              hjust = 1.2, vjust = 2, size = 4, fontface = "italic", color = "black") +
     ggtitle(title)
   
   # To keep organize the workspace, generate a result folder if it doesn't exist

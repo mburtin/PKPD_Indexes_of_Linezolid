@@ -75,189 +75,15 @@ pkpd_plot <- PKPD_index_plots(obs_data = data[["obs_mean"]],
                              file_name = "Andes PKPD Index for Linezolid.png")
 ```
 
-## VPCs Plots generation
-
-The code below will generate VPCs plots for fCmax/MIC, fAUC/MIC and fT>MIC for CSF.
-
-```{r}
-## Execute VPC scripts
-source("RScripts/vpc_script.R")
-source("RScripts/vpc_plots_script.R")
-
-## Allow to setup quickly wich VPC data you want to generate
-bin_data = csf_vpc_data
-
-## Generate VPC binned data
-binned_data <- list(
-  cmax_obs = bin_data$obs_data |>
-  filter(PKPD_Index == "I1_Cmax") |>
-  ntile_obs_bins(20),
-
-  cmax_sim = bin_data$cmax_sim |>
-    ntile_sim_bins(20),
-  
-  auc_obs = bin_data$obs_data |> 
-    filter(PKPD_Index == "I2_AUC") |>
-    ntile_obs_bins(20),
-  
-  auc_sim = bin_data$auc_sim |>
-    ntile_sim_bins(20),
-  
-  tmic_obs = bin_data$obs_data |>
-    filter(PKPD_Index == "I3_ToverMIC") |>
-    cut_obs_bins(0, 100, 20),
-  
-  tmic_sim = bin_data$tmic_sim |>
-    cut_sim_bins(0, 100, 20)
-)
-
-## Generate VPC plots
-VPC_Plots(binned_data, "VPC - CSF.png")
-```
-
-## Target estimations for each indexes
-
-The bloc below will generate a table with different PK/PD targets for bacteriostasis, 1-log kill, and 2-log kill effect.
-
-```{r}
-# Generic function to find the index value for a specific target. Based on B0 and pred data.
-target_index_efficacity <- list(
-  
-csf_efficacity = csf_data[["correlation_data"]] |>
-  select(c(
-    PKPD_Index,
-    Target_stasis,
-    Target_1LogKill,
-    Target_2LogKill,
-  )) |>
-  pivot_longer(-c(PKPD_Index),
-               names_to = "Efficacy Criteria",
-               values_to = "TargetIndexValue") |>
-  mutate(TargetIndexValue =
-           map_chr(TargetIndexValue,
-                   ~ if(anyNA(.x)) {return(NA)
-                   }
-                   else
-                   {
-                     paste0(
-                       round(.x[1, 1], 2), " [", round(.x[1, 3], 2), " - ", round(.x[1, 4], 2), "]"
-                     )})) |>
-  pivot_wider(names_from = PKPD_Index, values_from = TargetIndexValue),
-
-mix_efficacity = csf_with_plasma_index_data[["correlation_data"]] |>
-  select(c(
-    PKPD_Index,
-    Target_stasis,
-    Target_1LogKill,
-    Target_2LogKill,
-  )) |>
-  pivot_longer(-c(PKPD_Index),
-               names_to = "Efficacy Criteria",
-               values_to = "TargetIndexValue") |>
-  mutate(TargetIndexValue =
-           map_chr(TargetIndexValue,
-                   ~ if(anyNA(.x)) {return(NA)
-                   }
-                   else
-                   {
-                     paste0(
-                       round(.x[1, 1], 2), " [", round(.x[1, 3], 2), " - ", round(.x[1, 4], 2), "]"
-                     )})) |>
-  pivot_wider(names_from = PKPD_Index, values_from = TargetIndexValue)
-)
-
-# Resume the patient proportion reaching effect targets
-Effect_summary <- list(
-  
-  global_proportion = csf_data[["sim_data"]] |>
-  ungroup() |>
-  summarise(
-    Stasis_percentage = sum(deltaLog10CFU <= 0)/n() * 100,
-    Log1Kill_percentage = sum(deltaLog10CFU <= -1)/n() * 100,
-    Log2Kill_percentage = sum(deltaLog10CFU <= -2)/n() * 100
-  ),
-  
-  proportion_by_DoseGroup = csf_data[["sim_data"]] |>
-  ungroup() |>
-  group_by(DoseGroup) |>
-  summarise(
-    Stasis_percentage = sum(deltaLog10CFU <= 0)/n() * 100,
-    Log1Kill_percentage = sum(deltaLog10CFU <= -1)/n() * 100,
-    Log2Kill_percentage = sum(deltaLog10CFU <= -2)/n() * 100,
-  ) |> filter(DoseGroup != "control"),
-  
-  proportion_by_AMT = csf_data[["sim_data"]] |>
-  ungroup() |>
-  group_by(AMT) |>
-  summarise(
-    Stasis_percentage = sum(deltaLog10CFU <= 0)/n() * 100,
-    Log1Kill_percentage = sum(deltaLog10CFU <= -1)/n() * 100,
-    Log2Kill_percentage = sum(deltaLog10CFU <= -2)/n() * 100,
-  ),
-  
-  proportion_by_AMT_and_DG = csf_data[["sim_data"]] |>
-  filter(DoseGroup != "continuous_infusion") |>
-  ungroup() |>
-  group_by(DoseGroup, AMT) |>
-  summarise(
-    Stasis_percentage = sum(deltaLog10CFU <= 0)/n() * 100,
-    Log1Kill_percentage = sum(deltaLog10CFU <= -1)/n() * 100,
-    Log2Kill_percentage = sum(deltaLog10CFU <= -2)/n() * 100,
-  )
-)
-```
-
-The bloc below was used to generate comparison plots between the proportion of patient reaching the PKPD targets and the proportion of patients reaching a specific effect for 600mg.
-
-```{r}
-source("RScripts/pkpd_index_plots_script_02.R")
-
-csf_plot <- PKPD_target_plots_600mg(obs_data = csf_data[["sim_data"]] |> 
-                                  filter(DoseGroup == "fractioned_12h" & AMT == 1200), 
-                                pred_data = csf_data[["pred_data"]],
-                                effect = 0,
-                                auc_target = 30,
-                                tmic_target = 63,
-                                title = "LNZ PKPD Index for CSF" ,
-                                filename = "LNZ PKPD Indexes for CSF target.png")
-
-csf_plot2 <- PKPD_effect_plots_600mg(obs_data = csf_data[["sim_data"]] |> 
-                                  filter(DoseGroup == "fractioned_12h" & AMT == 1200), 
-                                effect = 0,
-                                auc_target = 30,
-                                tmic_target = 63,
-                                pred_data = csf_data[["pred_data"]], 
-                                title = "LNZ PKPD Index for CSF" ,
-                                filename = "LNZ PKPD Indexes for CSF target.png")
-
-csf_plot + csf_plot2 + plot_layout(nrow = 2, guides = 'collect') +
-  plot_annotation(
-    theme = theme(
-      plot.margin = margin(t = 20, r = 40, b = 20, l = 40), 
-    ))
-
-ggsave(file.path(getwd(), "results", "600m_atteignment.png"), width = 8, height = 4, dpi = 1200)
-
-```
-
 ## PK & PD Analysis
 
 ```{r}
 ## Summarize data
-summary_fractioned <- sim_results_fractioned$fractioned_results$SA07982 |>
+summary_fractioned <- sim_results_fractioned[["fractioned_results"]][["SA6538p"]] |>
   group_by(DoseGroup, AMT, time) |>
   summarize(
     C_CENTRAL = mean(C_CENTRAL),
-    C_CSF = mean(C_CSF),
-    Log10CFU = mean(Log10CFU_CSF)
-    )
-
-summary_continuous_inf <- sim_results_continuous_inf$continuous_inf_results |>
-  group_by(AMT, time) |>
-  summarize(
-    C_CENTRAL = mean(C_CENTRAL),
-    C_CSF = mean(C_CSF),
-    Log10CFU = mean(Log10CFU_CSF)
+    Log10CFU = mean(Log10CFU)
     )
 
 ## PK plots
@@ -274,53 +100,6 @@ summary_fractioned |>
     color = "Dosing regimens"
   ) +
   scale_x_continuous(breaks = seq(0, 24, 4))
-### CSF PK for fractioned doses
-summary_fractioned |>
-  filter(AMT == 1000) |>
-  filter(DoseGroup == "fractioned_24h") |>
-  ggplot(aes(x = time, y = C_CSF)) +
-  geom_line(linewidth = 0.75) +
-  labs(
-    x = "Time (h)", 
-    y = "Unbound concentrations (mg/L)"
-  ) +
-  scale_x_continuous(breaks = seq(0, 24, 4)) +
-  ylim(0, 8) +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    axis.ticks = element_blank(),
-    axis.text = element_blank(),
-    axis.title = element_blank(),
-    panel.background = element_blank(),
-    plot.background = element_blank(),
-    axis.line = element_line()
-    )
-ggsave("PK.png", width = 4, height = 4, dpi = 1200)
-### Plasma PK for continuous infusion
-summary_continuous_inf |>
-  filter(AMT != 0) |>
-  ggplot(aes(x = time, y = C_CENTRAL, color = as.factor(AMT))) +
-  geom_line(linewidth = 0.75) +
-  labs(
-    x = "Time (h)", 
-    y = "Linezolid concentrations (mg/L)", 
-    title = "Plasma PK of Linezolid for each dose amount in continuous infusion",
-    color = "Dose amounts"
-  ) +
-  scale_x_continuous(breaks = seq(0, 24, 4))
-### CSF PK for continuous infusion
-summary_continuous_inf |>
-  filter(AMT != 0) |>
-  ggplot(aes(x = time, y = C_CSF, color = as.factor(AMT))) +
-  geom_line(linewidth = 0.75) +
-  labs(
-    x = "Time (h)", 
-    y = "Linezolid concentrations (mg/L)", 
-    title = "CSF PK of Linezolid for each dose amount in continuous infusion",
-    color = "Dose amounts"
-  ) +
-  scale_x_continuous(breaks = seq(0, 24, 4))
 ### PD for fractioned doses
 summary_fractioned |>
   filter(AMT != 0) |>
@@ -334,11 +113,4 @@ summary_fractioned |>
     color = "Dosing regimens"
   ) +
   scale_x_continuous(breaks = seq(0, 24, 4))
-```
-
-
-```{r}
-HF_data <- read.csv("data/Dataset_HF.csv")
-
-HF_data <- HF_data |> filter(TIME == 24.0)
 ```
