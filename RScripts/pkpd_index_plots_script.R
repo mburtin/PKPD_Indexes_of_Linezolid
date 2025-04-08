@@ -14,8 +14,8 @@ PKPD_index_plots <- function(obs_data, pred_data, title, file_name) {
                    "I3_ToverMIC" = "fT>MIC (%)"))) +
     facetted_pos_scales(
       x = list(
-        PKPD_Index == "I1_Cmax" ~ scale_x_continuous(limits = c(1, 100),
-                                                     breaks = c(1, 10, 100),
+        PKPD_Index == "I1_Cmax" ~ scale_x_continuous(limits = c(1, 1000),
+                                                     breaks = c(1, 10, 100, 1000),
                                                      trans="log10",
                                                      name = expression(italic(f)*Cmax/MIC)),
         PKPD_Index == "I2_AUC" ~ scale_x_continuous(limits = c(10, 1000), 

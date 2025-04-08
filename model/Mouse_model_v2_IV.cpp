@@ -9,8 +9,8 @@ $PROB
 /// Parameters definition  ///
 //////////////////////////////
 $PARAM @annotated
-V1    : 0.98   : Plamatic volume (L/kg)
-CL    : 0.6   : Clearance (L/h/kg)
+V1    : 1.21   : Plamatic volume (L/kg)
+CL    : 0.89   : Clearance (L/h/kg)
 
 $PARAM @annotated   // PD parameters
 B0   : 6.05 : Initial bacterial count (log10(CFU/ml))

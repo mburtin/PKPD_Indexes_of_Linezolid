@@ -35,14 +35,14 @@ simulate_fractioned_dose <- function(i, fractioned_daily_AMT) {
   
   q12 <- model_list[[i]] |>
     mrgsolve::idata_set(i_data) |>
-    mrgsolve::ev(amt = fractioned_daily_AMT / 2, ii = 12, addl = 1) |>
+    mrgsolve::ev(amt = fractioned_daily_AMT / 2, ii = 12, tinf=0.5, addl = 1) |>
     mrgsolve::mrgsim(delta = 0.1, end = 24) |>
     dplyr::mutate(STRN = strain_name, AMT = fractioned_daily_AMT, DoseGroup = "fractioned_12h") |>
     clean_sim_table()
   
   q6 <- model_list[[i]] |>
     mrgsolve::idata_set(i_data) |>
-    mrgsolve::ev(amt = fractioned_daily_AMT / 4, ii = 6, addl = 3) |>
+    mrgsolve::ev(amt = fractioned_daily_AMT / 4, ii = 6, tinf=0.5, addl = 3) |>
     mrgsolve::mrgsim(delta = 0.1, end = 24) |>
     dplyr::mutate(STRN = strain_name, AMT = fractioned_daily_AMT, DoseGroup = "fractioned_6h") |>
     clean_sim_table()

@@ -88,12 +88,11 @@ ggplot() +
 
 # Andes PK
 ```{r}
-mouse_model <- mread("model/Mouse_model_v2")
+mouse_model <- mread("model/Mouse_model_v2_IV")
 
-ev05 <- ev(ID = 80, amt = 80, cmt ="A")
-ev06 <- ev(ID = 40, amt = 40, cmt = "A")
-ev07 <- ev(ID = 20, amt = 20, cmt = "A")
-subcut_dose <- rbind(ev05@data, ev06@data, ev07@data)
+ev05 <- ev(ID = 80, amt = 80, tinf = 0.5, cmt ="CENTRAL")
+ev07 <- ev(ID = 20, amt = 20, tinf = 0.5, cmt = "CENTRAL")
+subcut_dose <- rbind(ev05@data, ev07@data)
 
 mouse_sim_02 <- mouse_model |>
     mrgsolve::data_set(subcut_dose) |>
@@ -102,8 +101,6 @@ mouse_sim_02 <- mouse_model |>
 
 ggplot() +
     geom_line(data = mouse_sim_02, aes(x = time, y = C_CENTRAL, color = factor(ID))) +
-    geom_line(data = sandberg_data, aes(x = time, y = conc, color = factor(ID)), linetype = "dashed") +
-    geom_point(data = sandberg_data, aes(x = time, y = conc, color = factor(ID)), shape = 2) +
   geom_line(data = andes_data, aes(x = time, y = conc, color = factor(ID)), linetype = "dashed") +
     geom_point(data = andes_data, aes(x = time, y = conc, color = factor(ID)), shape = 12) +
     scale_y_continuous(limits = c(0, 80), breaks = seq(0, 80, 10)) +
