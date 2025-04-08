@@ -48,7 +48,7 @@ index_PKPD_fit_curve <- function(data) {
   require(car)          # DeltaMethod
   
   ## Format the data
-  nestedData <- data%>%mutate(deltaLog10CFU = MaxCFU - Log10CFU) |>  group_by(PKPD_Index)%>%nest()
+  nestedData <- data%>%mutate(deltaLog10CFU = B0 - Log10CFU) |>  group_by(PKPD_Index)%>%nest()
   
   ## Model fitting with NLS
   nestedData$nls <-
@@ -74,15 +74,6 @@ index_PKPD_fit_curve <- function(data) {
             }
             else{
               calculate_rsq(.x)[[1]]
-            })
-  
-  nestedData$Adj.Rsq <-
-    map_dbl(nestedData$nls,
-            ~ if (anyNA(.x)) {
-              return(NA)
-            }
-            else{
-              calculate_rsq(.x)[[2]]
             })
   
   ## Estimate each parameters
@@ -129,31 +120,6 @@ index_PKPD_fit_curve <- function(data) {
             } else {
               sd(residuals(.x))
             })
-  
-  ## Estimate some DeltaCFU targets
-  nestedData$Target_stasis <-
-    map(nestedData$nls,
-        ~ if (anyNA(.x)) {
-          return(NA)
-        }
-        else{
-          deltaMethod(.x, "(I0*IC50^H/(Imax-I0))^(1/H)")})
-  
-  nestedData$Target_1LogKill <-
-    map(nestedData$nls,
-        ~ if (anyNA(.x)) {
-          return(NA)
-        }
-        else{
-          deltaMethod(.x, "((I0+1)*IC50^H/(Imax-I0-1))^(1/H)")})
-  
-  nestedData$Target_2LogKill <-
-    map(nestedData$nls,
-        ~ if (anyNA(.x)) {
-          return(NA)
-        }
-        else{
-          deltaMethod(.x, "((I0+2)*IC50^H/(Imax-I0-2))^(1/H)")})
   
   return(nestedData)
 }

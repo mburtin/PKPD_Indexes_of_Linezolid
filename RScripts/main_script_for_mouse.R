@@ -126,10 +126,9 @@ generate_PKPD_fit_data <- function(data) {
   correlation_data <- data |>
     unnest(c(data)) |> # Unwrap the main dataset
     select(STRN, MIC, DoseGroup, ID, AMT, time, B0, PKPD_Index, value, deltaLog10CFU, Rsq) |>
-    filter(ID > 0) |>
     # Facet_grid order by name, so this fix AUC/MIC displayed before Cmax
     mutate(PKPD_Index = case_when(
-      PKPD_Index %in% c("CENTRAL_Cmax", "CSF_Cmax") ~ "I1_Cmax",
+      PKPD_Index %in% c("CENTRAL_Cmax", "CSF_Cmax") ~ "I4_Cmax",
       PKPD_Index %in% c("CENTRAL_AUC_MIC", "CSF_AUC_MIC") ~ "I2_AUC",
       PKPD_Index %in% c("CENTRAL_ToverMIC", "CSF_ToverMIC") ~ "I3_ToverMIC",
       TRUE ~ PKPD_Index
@@ -162,7 +161,7 @@ generate_pred_data <- function(data) {
     expand(value = seq(0.1, 1000, 0.1)) |>
     mutate(pred = Emax_model(value, I0, Imax, IC50, H)) |>
     mutate(PKPD_Index = case_when(
-      PKPD_Index %in% c("CENTRAL_Cmax", "CSF_Cmax") ~ "I1_Cmax",
+      PKPD_Index %in% c("CENTRAL_Cmax", "CSF_Cmax") ~ "I4_Cmax",
       PKPD_Index %in% c("CENTRAL_AUC_MIC", "CSF_AUC_MIC") ~ "I2_AUC",
       PKPD_Index %in% c("CENTRAL_ToverMIC", "CSF_ToverMIC") ~ "I3_ToverMIC",
       TRUE ~ PKPD_Index
