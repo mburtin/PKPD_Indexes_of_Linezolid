@@ -30,38 +30,17 @@ clean_sim_table <- function(df) {
 #######
 ##  Fractioned simulations
 ######
-simulate_fractioned_dose <- function(i, fractioned_daily_AMT) {
+
+simulate_fractioned_dose <- function(i, dose) {
   strain_name <- names(model_list[i])
   
-  q12 <- model_list[[i]] |>
-    mrgsolve::idata_set(i_data) |>
-    mrgsolve::ev(amt = fractioned_daily_AMT / 2, ii = 12, tinf=0.5, addl = 1) |>
+  mouse_sim <- model_list[[i]] |>
+    mrgsolve::data_set(dose) |>
     mrgsolve::mrgsim(delta = 0.1, end = 24) |>
-    dplyr::mutate(STRN = strain_name, AMT = fractioned_daily_AMT, DoseGroup = "fractioned_12h") |>
+    dplyr::mutate(STRN = strain_name, AMT = dose[,3], DoseGroup = dose[,4]) |>
     clean_sim_table()
   
-  q6 <- model_list[[i]] |>
-    mrgsolve::idata_set(i_data) |>
-    mrgsolve::ev(amt = fractioned_daily_AMT / 4, ii = 6, tinf=0.5, addl = 3) |>
-    mrgsolve::mrgsim(delta = 0.1, end = 24) |>
-    dplyr::mutate(STRN = strain_name, AMT = fractioned_daily_AMT, DoseGroup = "fractioned_6h") |>
-    clean_sim_table()
-  
-  q3 <- model_list[[i]] |>
-    mrgsolve::idata_set(i_data) |>
-    mrgsolve::ev(amt = fractioned_daily_AMT / 8, ii = 3, addl = 7) |>
-    mrgsolve::mrgsim(delta = 0.1, end = 24) |>
-    dplyr::mutate(STRN = strain_name, AMT = fractioned_daily_AMT, DoseGroup = "fractioned_3h") |>
-    clean_sim_table()
-  
-  q1half <- model_list[[i]] |>
-    mrgsolve::idata_set(i_data) |>
-    mrgsolve::ev(amt = fractioned_daily_AMT / 16, ii = 1.5, addl = 15) |>
-    mrgsolve::mrgsim(delta = 0.1, end = 24) |>
-    dplyr::mutate(STRN = strain_name, AMT = fractioned_daily_AMT, DoseGroup = "fractioned_1-5h") |>
-    clean_sim_table()
-  
-  return(rbind(q12, q6, q3, q1half) |> tibble::as_tibble())
+  return(rbind(mouse_sim) |> tibble::as_tibble())
 }
 
 # Print a progress message in the console
@@ -72,8 +51,8 @@ plan(multisession, workers = thread_number)
 
 # Multithreading loop: one thread per strain
 fractioned_results <- future_lapply(1:length(model_list), function(i) {
-  result_list <- lapply(fractioned_daily_AMT, function(fractioned_daily_AMT_value) {
-    simulate_fractioned_dose(i, fractioned_daily_AMT_value)
+  result_list <- lapply(1:nrow(subcut_dose), function(j) {
+    simulate_fractioned_dose(i, subcut_dose[j, ])
   })
   bind_rows(result_list)
 }, future.seed = TRUE)
@@ -174,18 +153,6 @@ generate_pred_data <- function(data) {
 pred_data <- generate_pred_data(corrCurve_data)
 
 #############################################################################
-########          Generate a dataset with observation mean           ########                       
-#############################################################################
-
-obs_mean <- sim_data |>
-  group_by(STRN, DoseGroup, AMT, PKPD_Index) |>
-  summarize( 
-    value = mean(value),
-    deltaLog10CFU = mean(deltaLog10CFU),
-    Rsq = unique(Rsq),
-  )
-
-#############################################################################
 ########                    Environment cleaning                     ########                       
 #############################################################################
 # Reorganize all data in lists
@@ -194,11 +161,8 @@ sim_results_fractioned <- list(fractioned_results = fractioned_results,
 data <- list(
   sim_data = sim_data,
   correlation_data = corrCurve_data,
-  pred_data = pred_data,
-  obs_mean = obs_mean
+  pred_data = pred_data
 )
-
-mrgsolve_model <- list(model_file = model_file, model_list = model_list)
 
 # Stop recording time execution
 elapsed <- toc(quiet = TRUE)
@@ -206,10 +170,8 @@ message("Total execution time: ", round(elapsed$toc - elapsed$tic, 0), " seconds
 
 # Clean the environment
 rm(fractioned_results, fractioned_24h_full, 
-   i_data, 
    sim_data,
    pred_data,
-   obs_mean,
    corrCurve_data,
    model_file, model_list, elapsed)
 

@@ -38,22 +38,47 @@ thread_number = 9
 
 # These PK parameters will be used later in the Rscripts.
 # So we define them here, to avoid to hardcode values.
-CL = 0.76
-V1 = 0.15
-FU = 0.69
+V1 = 1.31
+
+#    SA07982 = param(model_file, B0 = 5.98, Bmax = 9.76, Kg = 1.04,
+#                   Emax = 2.16, EC50 = 1.42, Kon = 0.0, MIC = 1.0),
+#    SA29213 = param(model_file, B0 = 6.02, Bmax = 9.35, Kg = 1.26,
+#                    Emax = 2.41, EC50 = 2.28, Kon = 0.014, MIC = 4.0),
+#    SA01943 = param(model_file, B0 = 6.09, Bmax = 9.26, Kg = 1.09,
+#                    Emax = 1.93, EC50 = 1.1, Kon = 0.016, MIC = 2.0),
+#    SA33591 = param(model_file, B0 = 5.96, Bmax = 9.46, Kg = 1.02,
+#                    Emax = 1.52, EC50 = 0.68, Kon = 0.0, MIC = 1.0),
 
 # Specific model parameters for each strains
 model_list <- list(
     # S. Aureus
-    SA6538p = param(model_file, B0 = 6.09, Bmax = 9.26, Kg = 1.09,
-                    Emax = 1.93, EC50 = 1.1, Kon = 0.016, MIC = 2.0)
+    SA29213 = param(model_file, B0 = 6.02, Bmax = 9.35, Kg = 1.26,
+                   Emax = 2.41, EC50 = 2.28, Kon = 0.014, MIC = 4.0)
 )
 
-# Specify AMT choosen for fractioned doses
-fractioned_daily_AMT <- c(2.5, 5, 10, 20, 40, 80, 160, 500, 1280)
+dose0 <- ev(ID = 0, amt = 0, ii= 24, addl = 0, cmt ="A")
+dose1 <- ev(ID = 1, amt = 72, ii= 24, addl = 0, cmt ="A")
+dose2 <- ev(ID = 2, amt = 80, ii= 12, addl = 1, cmt ="A")
+dose3 <- ev(ID = 3, amt = 60, ii= 12, addl = 1, cmt ="A")
+dose4 <- ev(ID = 4, amt = 44, ii= 12, addl = 1, cmt ="A")
+dose5 <- ev(ID = 5, amt = 72, ii= 8, addl = 2, cmt ="A")
+dose6 <- ev(ID = 6, amt = 80, ii= 6, addl = 3, cmt ="A")
+dose7 <- ev(ID = 7, amt = 72, ii= 6, addl = 3, cmt ="A")
+dose8 <- ev(ID = 8, amt = 60, ii= 6, addl = 3, cmt ="A")
+dose9 <- ev(ID = 9, amt = 48, ii= 6, addl = 3, cmt ="A")
+dose10 <- ev(ID = 10, amt = 60, ii= 4, addl = 5, cmt ="A")
+dose11 <- ev(ID = 11, amt = 44, ii= 4, addl = 5, cmt ="A")
+dose12 <- ev(ID = 12, amt = 36, ii= 4, addl = 5, cmt ="A")
+dose13 <- ev(ID = 13, amt = 24, ii= 4, addl = 5, cmt ="A")
+dose14 <- ev(ID = 14, amt = 16, ii= 4, addl = 5, cmt ="A")
 
-# Specify the number of simulated patients
-i_data <- expand.idata(ID = 1:1)
+subcut_dose = rbind(dose0@data, dose1@data, dose2@data, dose3@data, dose4@data, 
+                    dose5@data, dose6@data, dose7@data, dose8@data,
+                    dose9@data, dose10@data, dose11@data, dose12@data,
+                    dose13@data, dose14@data)
+
+rm(dose0, dose1, dose2, dose3, dose4, dose5, dose6, dose7, dose8,
+   dose9, dose10, dose11, dose12, dose13, dose14)
 
 ####
 ## Execute the main script
@@ -69,10 +94,10 @@ The code below will generate PK/PD index plots for fCmax/MIC, fAUC/MIC and fT>MI
 ```{r}
 source("RScripts/pkpd_index_plots_script.R")
 
-pkpd_plot <- PKPD_index_plots(obs_data = data[["obs_mean"]], 
+pkpd_plot <- PKPD_index_plots(obs_data = data[["sim_data"]], 
                              pred_data = data[["pred_data"]], 
-                             title = "Reproduction of Andes PKPD Index for Linezolid in the mouse" ,
-                             file_name = "Andes PKPD Index for Linezolid.png")
+                             title = "Reproduction of Sandberg PKPD Index for Linezolid in the mouse" ,
+                             file_name = "Sandberg PKPD Index for Linezolid.png")
 ```
 
 ## PK & PD Analysis
