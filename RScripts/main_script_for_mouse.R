@@ -125,7 +125,7 @@ generate_PKPD_fit_data <- function(data) {
   
   correlation_data <- data |>
     unnest(c(data)) |> # Unwrap the main dataset
-    select(STRN, MIC, DoseGroup, ID, AMT, time, B0, PKPD_Index, value, deltaLog10CFU, Rsq) |>
+    select(STRN, MIC, DoseGroup, ID, AMT, time, B0, MaxCFU, PKPD_Index, value, deltaLog10CFU, Rsq) |>
     # Facet_grid order by name, so this fix AUC/MIC displayed before Cmax
     mutate(PKPD_Index = case_when(
       PKPD_Index %in% c("CENTRAL_Cmax", "CSF_Cmax") ~ "I4_Cmax",
@@ -174,18 +174,6 @@ generate_pred_data <- function(data) {
 pred_data <- generate_pred_data(corrCurve_data)
 
 #############################################################################
-########          Generate a dataset with observation mean           ########                       
-#############################################################################
-
-obs_mean <- sim_data |>
-  group_by(STRN, DoseGroup, AMT, PKPD_Index) |>
-  summarize( 
-    value = mean(value),
-    deltaLog10CFU = mean(deltaLog10CFU),
-    Rsq = unique(Rsq),
-  )
-
-#############################################################################
 ########                    Environment cleaning                     ########                       
 #############################################################################
 # Reorganize all data in lists
@@ -194,8 +182,7 @@ sim_results_fractioned <- list(fractioned_results = fractioned_results,
 data <- list(
   sim_data = sim_data,
   correlation_data = corrCurve_data,
-  pred_data = pred_data,
-  obs_mean = obs_mean
+  pred_data = pred_data
 )
 
 mrgsolve_model <- list(model_file = model_file, model_list = model_list)
@@ -209,7 +196,6 @@ rm(fractioned_results, fractioned_24h_full,
    i_data, 
    sim_data,
    pred_data,
-   obs_mean,
    corrCurve_data,
    model_file, model_list, elapsed)
 

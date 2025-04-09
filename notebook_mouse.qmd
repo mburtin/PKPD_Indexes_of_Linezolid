@@ -27,7 +27,7 @@ if (!dir.exists("results")) {
 }
 
 # Load the model
-model_file <- mread("model/Mouse_model_v2_IV")
+model_file <- mread("model/Mouse_model_v2_IV_Linear_PK")
 
 ####
 ## Specify your entries
@@ -36,14 +36,10 @@ model_file <- mread("model/Mouse_model_v2_IV")
 # Define the maximum thread number to use for simulations
 thread_number = 9
 
-# These PK parameters will be used later in the Rscripts.
-# So we define them here, to avoid to hardcode values.
-V1 = 1.2
-
 # Specific model parameters for each strains
 model_list <- list(
     # S. Aureus
-    SA6538p = param(model_file, B0 = 6.09, Bmax = 9.26, Kg = 1.09,
+    SA6538p = param(model_file, B0 = 6.29, Bmax = 9.26, Kg = 1.09,
                     Emax = 1.93, EC50 = 1.1, Kon = 0.016, MIC = 2.0)
 )
 
@@ -67,10 +63,10 @@ The code below will generate PK/PD index plots for fCmax/MIC, fAUC/MIC and fT>MI
 ```{r}
 source("RScripts/pkpd_index_plots_script.R")
 
-pkpd_plot <- PKPD_index_plots(obs_data = data[["obs_mean"]], 
+pkpd_plot <- PKPD_index_plots(obs_data = data[["sim_data"]], 
                              pred_data = data[["pred_data"]], 
-                             title = "Reproduction of Andes PKPD Index for Linezolid in the mouse" ,
-                             file_name = "Andes PKPD Index for Linezolid.png")
+                             title = "Reproduction of Andes PKPD Index for Linezolid - Non Linear PK" ,
+                             file_name = "Andes PKPD Index for Linezolid - Non Linear PK.png")
 ```
 
 ## PK & PD Analysis
