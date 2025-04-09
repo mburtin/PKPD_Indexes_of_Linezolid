@@ -9,8 +9,9 @@ $PROB
 /// Parameters definition  ///
 //////////////////////////////
 $PARAM @annotated
-V1    : 1.21   : Plamatic volume (L/kg)
-CL    : 0.89  : Clearance (L/h/kg)
+V1    : 1.2   : Plamatic volume (L/kg)
+Vm    : 65.8    : Maximum elimination rate (L/h/kg)
+Km    : 54.02    : Michaelis constant (mg/L)
 FU    : 0.7 : Fraction unbound in plasma
 
 $PARAM @annotated   // PD parameters
@@ -58,9 +59,7 @@ if(TIME == 0.0) {
 //////////////////////////////
 $ODE    
 // PK Equations
-double k10   = CL/V1; // (h)
-
-dxdt_CENTRAL = -k10*CENTRAL;
+dxdt_CENTRAL = - (Vm*(CENTRAL/V1)/(Km + (CENTRAL/V1)));
 
 // PD Equations
 double B    = S + Rp;

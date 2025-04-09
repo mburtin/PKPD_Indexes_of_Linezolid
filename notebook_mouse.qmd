@@ -38,8 +38,7 @@ thread_number = 9
 
 # These PK parameters will be used later in the Rscripts.
 # So we define them here, to avoid to hardcode values.
-CL = 0.89
-V1 = 1.21
+V1 = 1.2
 
 # Specific model parameters for each strains
 model_list <- list(
