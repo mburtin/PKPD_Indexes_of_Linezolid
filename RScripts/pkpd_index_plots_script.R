@@ -15,11 +15,16 @@ PKPD_index_plots <- function(obs_data, pred_data, title, file_name) {
     facetted_pos_scales(
       x = list(
         PKPD_Index == "I4_Cmax" ~ scale_x_continuous(limits = c(1, 1000),
-                                                     breaks = c(1, 10, 100, 1000),
+                                                     breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9,
+                                                                10, 20, 30, 40, 50, 60, 70, 80, 90, 
+                                                                100, 200, 300, 400, 500, 600, 700, 800, 900, 1000),
                                                      trans="log10",
+                                                     labels = function(x) ifelse(x %in% c(1, 10, 100, 1000), as.character(x), ""),
                                                      name = expression(italic(f)*Cmax/MIC)),
         PKPD_Index == "I2_AUC" ~ scale_x_continuous(limits = c(10, 1000), 
-                                                    breaks = c(10, 100, 1000),
+                                                    breaks = c(10, 20, 30, 40, 50, 60, 70, 80, 90, 
+                                                               100, 200, 300, 400, 500, 600, 700, 800, 900, 1000),
+                                                    labels = function(x) ifelse(x %in% c(10, 100, 1000), as.character(x), ""),
                                                     trans="log10",
                                                     name = expression(italic(f)*AUC/MIC)),
         PKPD_Index == "I3_ToverMIC" ~ scale_x_continuous(limits = c(0, 100),
