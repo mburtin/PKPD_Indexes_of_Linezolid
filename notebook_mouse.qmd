@@ -27,7 +27,7 @@ if (!dir.exists("results")) {
 }
 
 # Load the model
-model_file <- mread("model/Mouse_model_v2")
+model_file <- mread("model/Mouse_model_v2_IV")
 
 ####
 ## Specify your entries
@@ -38,9 +38,8 @@ thread_number = 9
 
 # These PK parameters will be used later in the Rscripts.
 # So we define them here, to avoid to hardcode values.
-CL = 0.76
-V1 = 0.15
-FU = 0.69
+CL = 0.89
+V1 = 1.21
 
 # Specific model parameters for each strains
 model_list <- list(

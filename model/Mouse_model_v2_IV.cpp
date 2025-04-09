@@ -10,7 +10,8 @@ $PROB
 //////////////////////////////
 $PARAM @annotated
 V1    : 1.21   : Plamatic volume (L/kg)
-CL    : 0.89   : Clearance (L/h/kg)
+CL    : 0.89  : Clearance (L/h/kg)
+FU    : 0.75 : Fraction unbound in plasma
 
 $PARAM @annotated   // PD parameters
 B0   : 6.05 : Initial bacterial count (log10(CFU/ml))
@@ -59,11 +60,11 @@ $ODE
 // PK Equations
 double k10   = CL/V1; // (h)
 
-dxdt_CENTRAL = - k10*CENTRAL;
+dxdt_CENTRAL = -k10*CENTRAL;
 
 // PD Equations
 double B    = S + Rp;
-double E    = (Emax * (1 - ARon) * C_CENTRAL) / (C_CENTRAL + EC50);
+double E    = (Emax * (1 - ARon) * (C_CENTRAL*FU)) / (C_CENTRAL*FU + EC50);
 double Ksr  = ((Kg - Kd) * B) / pow(10, Bmax);
 
 dxdt_S      = Kg*S - (E + Kd)*S - Ksr*S;
