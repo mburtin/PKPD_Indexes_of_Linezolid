@@ -11,7 +11,7 @@ $PROB
 $PARAM @annotated
 V1    : 1.21   : Plamatic volume (L/kg)
 CL    : 0.89  : Clearance (L/h/kg)
-FU    : 0.75 : Fraction unbound in plasma
+FU    : 0.7 : Fraction unbound in plasma
 
 $PARAM @annotated   // PD parameters
 B0   : 6.05 : Initial bacterial count (log10(CFU/ml))

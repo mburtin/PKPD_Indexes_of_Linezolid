@@ -49,7 +49,7 @@ model_list <- list(
 )
 
 # Specify AMT choosen for fractioned doses
-fractioned_daily_AMT <- c(2.5, 5, 10, 20, 40, 80, 160, 500, 1280)
+fractioned_daily_AMT <- c(0, 2.5, 3, 5, 8, 10, 25, 40, 80, 120, 160, 640, 900, 1280)
 
 # Specify the number of simulated patients
 i_data <- expand.idata(ID = 1:1)

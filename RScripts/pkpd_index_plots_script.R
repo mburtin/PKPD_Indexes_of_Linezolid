@@ -31,8 +31,8 @@ PKPD_index_plots <- function(obs_data, pred_data, title, file_name) {
     geom_text(aes(x = Inf, y = Inf, label = paste("R² = ", round(Rsq, 2))), 
               hjust = 1.2, vjust = 2, size = 4, fontface = "italic", color = "black") +
     scale_y_continuous(
-      breaks = c(0, 1, 2, 3, 4, 5),
-      limits = c(-1, 5),
+      breaks = c(0, 1, 2, 3, 4, 5, 6, 7),
+      limits = c(0, 7),
       name = expression(Delta~log[10]~'CFU/ml')
     ) +
     theme(panel.grid.major = element_blank(),
