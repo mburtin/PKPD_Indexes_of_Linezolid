@@ -9,9 +9,10 @@ $PROB
 /// Parameters definition  ///
 //////////////////////////////
 $PARAM @annotated
-V1     : 0.15   : Plamatic volume (L/kg)
-PCL    : 0.76   : Clearance (L/h/kg)
-Ka     : 0.75   : Absorption
+V1     : 1.31   : Plamatic volume (L/kg)
+Vm     : 58     : X
+Km     : 46.51  : Y
+Ka     : 9.37   : Absorption
 
 $PARAM @annotated   // PD parameters
 B0   : 6.05 : Initial bacterial count (log10(CFU/ml))
@@ -25,9 +26,6 @@ Koff : 0.0  : Rate of adaptive resistance disappearance (h-1) // For now disable
 
 $PARAM @annotated   // Other parameters
 MIC  : 2.0  : Minimal inhibitory concentration (mg/L)
-
-$OMEGA @annotated 
-ECL  : 0.013  : ETA on Volume of central compartment
 
 ////////////////////////////////
 /// Compartments definition  ///
@@ -51,7 +49,6 @@ $GLOBAL
 double Cmax_CENTRAL;
 
 $MAIN
-double CL  = PCL*exp(ECL);
 S_0 = pow(10, B0);
 
 if(TIME == 0.0) {
@@ -63,10 +60,8 @@ if(TIME == 0.0) {
 //////////////////////////////
 $ODE    
 // PK Equations
-double k10   = CL/V1; // (h)
-
 dxdt_A = -Ka*A;
-dxdt_CENTRAL = Ka*A - k10*CENTRAL;
+dxdt_CENTRAL = Ka*A - (Vm*(CENTRAL/V1)/(Km + (CENTRAL/V1)));
 
 // PD Equations
 double B    = S + Rp;
