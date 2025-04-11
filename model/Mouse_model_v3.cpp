@@ -71,7 +71,7 @@ dxdt_PERIPHERAL = k12*CENTRAL - k21*PERIPHERAL;
 
 // PD Equations
 double B    = S + Rp;
-double E    = (Emax * (1 - ARon) * C_CENTRAL) / (C_CENTRAL + EC50);
+double E    = (Emax * (1 - ARon) * C_PERIPHERAL) / (C_PERIPHERAL + EC50);
 double Ksr  = ((Kg - Kd) * B) / pow(10, Bmax);
 
 dxdt_S      = Kg*S - (E + Kd)*S - Ksr*S;
@@ -86,6 +86,7 @@ dxdt_TOVER_MIC_CENTRAL = (C_CENTRAL > MIC) ? 1 : 0;
 
 $TABLE
 double C_CENTRAL  = CENTRAL/V1;
+double C_PERIPHERAL = PERIPHERAL/V2;
 double Log10CFU = log10(S + Rp);
 
 //////////////////////////////
