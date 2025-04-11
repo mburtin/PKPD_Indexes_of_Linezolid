@@ -1,0 +1,91 @@
+********************************************************************************
+*                   monocomp-non-linear-PK-sandberg.mlxtran                    *
+*                   April 11, 2025 at 15:13:20                                 *
+*                   Monolix version : 2024R1                                   *
+********************************************************************************
+
+
+ESTIMATION OF THE POPULATION PARAMETERS ________________________________________
+
+Fixed Effects ----------------------------     se_sa    rse(%)   P2.5_sa  P97.5_sa
+ka_pop :                              9.37      1.14      12.1      7.41      11.9
+V_pop  :                              1.31    0.0639      4.89      1.19      1.44
+Vm_pop :                                58      10.7      18.5      40.7      82.6
+Km_pop :                              46.5      11.5      24.6      29.3      73.9
+
+Error Model Parameters -------------------
+b      :                             0.133    0.0195      14.7       0.1     0.177
+
+Elapsed time (seconds):        1
+Exploratory phase iterations:       22 (Autostop)
+Smoothing phase iterations:          2 (Autostop)
+
+ _______________________________________________________________________________
+
+
+
+ESTIMATION OF THE INDIVIDUAL PARAMETERS ________________________________________
+
+
+Estimation of the individual parameters by Conditional Mode --------------------
+               min            Q1        median            Q3           max  shrinkage(%)
+ka :          9.37          9.37          9.37          9.37          9.37           nan
+V  :          1.31          1.31          1.31          1.31          1.31           nan
+Vm :            58            58            58            58            58           nan
+Km :          46.5          46.5          46.5          46.5          46.5           nan
+
+Elapsed time (seconds):        0
+
+ -------------------------------------------------------------------------------
+
+ _______________________________________________________________________________
+
+
+
+ESTIMATION OF THE FISHER INFORMATION MATRIX ____________________________________
+
+
+Estimation of the Fisher information matrix by Stochastic Approximation --------
+
+Correlation Matrix :
+ka_pop         1
+ V_pop   0.58753         1
+Vm_pop  -0.29406  -0.46622         1
+Km_pop  -0.29148  -0.49147   0.99097         1
+     b -0.010201  0.087255  0.032147  0.010857         1
+
+                               min       max   max/min
+Eigen values           :    0.0082       2.6   3.2e+02
+
+Elapsed time (seconds):    0.029
+Iterations:        1 (Autostop)
+
+ -------------------------------------------------------------------------------
+
+ _______________________________________________________________________________
+
+
+
+ESTIMATION OF THE LOG-LIKELIHOOD _______________________________________________
+
+                                                            (is)
+-2 x log-likelihood                       (OFV) :          95.51
+Akaike Information Criteria               (AIC) :         105.51
+Corrected Bayesian Information Criteria  (BICc) :         111.40
+Bayesian Information Criteria             (BIC) :         101.01
+
+Elapsed time                          (seconds) :           0.00
+CPU time                              (seconds) :           0.00
+MonteCarlo size (is):        1 (Fixed number of iterations)
+
+
+[Importance Sampling] Standard error        : 0.000
+                      Sampling distribution : T-distribution with 5 degrees of freedom
+
+ _______________________________________________________________________________
+
+DATASET INFORMATION
+Number of individuals: 3
+Number of observations (fconc): 24
+Number of doses: 3
+

@@ -1,0 +1,57 @@
+<DATAFILE>
+
+[FILEINFO]
+file={path='../../../../../data/andes_data_AIO - Infusion.csv'}
+delimiter = semicolon
+header={time, conc, AMT, rate, ID}
+
+[CONTENT]
+time = {use=time}
+conc = {use=observation, type=continuous}
+AMT = {use=amount}
+rate = {use=rate}
+ID = {use=identifier}
+
+<MODEL>
+
+[INDIVIDUAL]
+input = {Cl_pop, V_pop}
+
+DEFINITION:
+Cl = {distribution=logNormal, typical=Cl_pop, no-variability}
+V = {distribution=logNormal, typical=V_pop, no-variability}
+
+[LONGITUDINAL]
+input = {b}
+
+file = 'lib:infusion_1cpt_VCl.txt'
+
+DEFINITION:
+conc = {distribution=normal, prediction=Cc, errorModel=proportional(b)}
+
+<FIT>
+data = 'conc'
+model = conc
+
+<PARAMETER>
+Cl_pop = {value=0.925, method=MLE}
+V_pop = {value=1.179, method=MLE}
+b = {value=0.3, method=MLE}
+c = {value=1, method=FIXED}
+
+<MONOLIX>
+
+[TASKS]
+populationParameters()
+individualParameters(method = {conditionalMean, conditionalMode })
+fim(method = StochasticApproximation)
+logLikelihood(method = ImportanceSampling)
+
+[PLOTS]
+run = true
+plots = {indfits = {selected = true}, parameterdistribution = {selected = true}, obspred = {selected = true}, covariancemodeldiagnosis = {selected = true}, covariatemodeldiagnosis = {selected = true}, vpc = {selected = true}, residualsscatter = {selected = true}, residualsdistribution = {selected = true}, randomeffects = {selected = true}, saemresults = {selected = true}}
+
+[SETTINGS]
+GLOBAL:
+exportpath = '../../'
+

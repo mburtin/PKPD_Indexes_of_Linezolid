@@ -1,0 +1,3 @@
+id,importanceSampling
+80,26.200517
+20,16.196896

@@ -1,0 +1,4 @@
+id,eta_ka_SAEM,eta_V_SAEM,eta_Vm_SAEM,eta_Km_SAEM,eta_ka_mode,eta_V_mode,eta_Vm_mode,eta_Km_mode
+80,0,0,0,0,0,0,0,0
+40,0,0,0,0,0,0,0,0
+20,0,0,0,0,0,0,0,0

@@ -1,0 +1,60 @@
+<DATAFILE>
+
+[FILEINFO]
+file={path='../../../../../data/sandberg_free_concentration_AIO.csv'}
+delimiter = comma
+header={time, fconc, AMT, ID}
+
+[CONTENT]
+time = {use=time}
+fconc = {use=observation, type=continuous}
+AMT = {use=amount}
+ID = {use=identifier}
+
+<MODEL>
+
+[INDIVIDUAL]
+input = {ka_pop, Km_pop, V_pop, Vm_pop}
+
+DEFINITION:
+ka = {distribution=logNormal, typical=ka_pop, no-variability}
+Km = {distribution=logNormal, typical=Km_pop, no-variability}
+V = {distribution=logNormal, typical=V_pop, no-variability}
+Vm = {distribution=logNormal, typical=Vm_pop, no-variability}
+
+[LONGITUDINAL]
+input = {b}
+
+file = 'lib:oral1_1cpt_kaVVmKm.txt'
+
+DEFINITION:
+fconc = {distribution=normal, prediction=Cc, errorModel=proportional(b)}
+
+<FIT>
+data = 'fconc'
+model = fconc
+
+<PARAMETER>
+Km_pop = {value=43.51, method=MLE}
+V_pop = {value=1.322, method=MLE}
+Vm_pop = {value=55.36, method=MLE}
+b = {value=0.3, method=MLE}
+c = {value=1, method=FIXED}
+ka_pop = {value=9.087, method=MLE}
+
+<MONOLIX>
+
+[TASKS]
+populationParameters()
+individualParameters(method = {conditionalMean, conditionalMode })
+fim(method = StochasticApproximation)
+logLikelihood(method = ImportanceSampling)
+
+[PLOTS]
+run = true
+plots = {indfits = {selected = true}, parameterdistribution = {selected = true}, obspred = {selected = true}, covariancemodeldiagnosis = {selected = true}, covariatemodeldiagnosis = {selected = true}, vpc = {selected = true}, residualsscatter = {selected = true}, residualsdistribution = {selected = true}, randomeffects = {selected = true}, saemresults = {selected = true}}
+
+[SETTINGS]
+GLOBAL:
+exportpath = '../../'
+

@@ -1,0 +1,5 @@
+parameters,shrinkage_mode
+ka,nan
+V,nan
+Vm,nan
+Km,nan
