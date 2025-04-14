@@ -28,14 +28,20 @@ PKPD_index_plots <- function(obs_data, pred_data, title, file_name) {
                                                          name = expression(T['>MIC']~'(%)'))
       ),
     ) +
-    geom_line(data = pred_data, aes(x=value, y=pred), linewidth=0.5) +
+    geom_line(data = pred_data |> filter(PKPD_Index != "I4_Cmax"), aes(x=value, y=pred), linewidth=0.5) +
     geom_text(aes(x = Inf, y = Inf, label = paste("R² = ", round(Rsq, 2))), 
               hjust = 1.2, vjust = 2, size = 4, fontface = "italic", color = "black") +
-    geom_hline(yintercept = 0, color = "black") +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
     scale_y_continuous(
       breaks = c(-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5),
       limits = c(-5, 5),
       name = expression(Delta~log[10]~'CFU/ml')
+    ) +
+    # Rename legends groups
+    scale_color_manual(
+      values = c("#377EB8", "purple", "#4DAF4A", "#FF7F00", "red"),  # Assigner des couleurs spécifiques
+      labels = c("q4h", "q6h", "q8h", "q12h", "q24h"),  # Nom des groupes
+      name = "Dosing regimens"  # Titre de la légende
     ) +
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
@@ -44,7 +50,8 @@ PKPD_index_plots <- function(obs_data, pred_data, title, file_name) {
           strip.placement = "outside",
           axis.title.y = element_text(size = 12),
           strip.text.x = element_text(size = 12),
-          axis.title.x = element_blank()
+          axis.title.x = element_blank(),
+          legend.position = "bottom",
     ) +
     ggtitle(title)
   

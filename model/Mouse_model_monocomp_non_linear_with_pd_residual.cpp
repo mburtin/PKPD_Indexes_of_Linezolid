@@ -10,8 +10,8 @@ $PROB
 //////////////////////////////
 $PARAM @annotated
 V1     : 1.31   : Plamatic volume (L/kg)
-Vm     : 58     : X
-Km     : 46.51  : Y
+Vm     : 58     : Maximal elimination rate (L/h/kg)
+Km     : 46.51  : Michaelis constant (mg/L)
 Ka     : 9.37   : Absorption
 
 $PARAM @annotated   // PD parameters
@@ -78,9 +78,12 @@ Cmax_CENTRAL          = (C_CENTRAL > Cmax_CENTRAL) ? C_CENTRAL : Cmax_CENTRAL;
 dxdt_AUC_CENTRAL      = C_CENTRAL;
 dxdt_TOVER_MIC_CENTRAL = (C_CENTRAL > MIC) ? 1 : 0;
 
+$SIGMA @labels PD_RES
+0.35
+
 $TABLE
 double C_CENTRAL  = CENTRAL/V1;
-double Log10CFU = log10(S + Rp);
+double Log10CFU = log10(S + Rp) + PD_RES;
 
 //////////////////////////////
 ///   Outputs definition   ///

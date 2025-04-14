@@ -9,12 +9,12 @@ $PROB
 /// Parameters definition  ///
 //////////////////////////////
 $PARAM @annotated
-V1     : 0.15  : Plamatic volume (L/kg)
-V2     : 0.4  : Volume of distribution (L/kg)
-Q      : 0.504    : Intercompartmental clearance (L/h/kg)
-Vm     : 77.3     : X
-Km     : 68.06  : Y
-Ka     : 1.07   : Absorption
+V1     : 0.16   : Plamatic volume (L/kg)
+V2     : 0.4    : Volume of distribution (L/kg)
+Q      : 0.74   : Intercompartmental clearance (L/h/kg)
+Vm     : 78.92  : Maximal elimination rate (mg/h/kg)
+Km     : 68.28  : Michaelis constant (mg/L)
+Ka     : 1.18   : Absorption
 
 $PARAM @annotated   // PD parameters
 B0   : 6.05 : Initial bacterial count (log10(CFU/ml))
