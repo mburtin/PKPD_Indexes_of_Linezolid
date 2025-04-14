@@ -44,7 +44,7 @@ model_list <- list(
 )
 
 # Specify AMT choosen for fractioned doses
-fractioned_daily_AMT <- c(0, 2.5, 3, 5, 8, 10, 25, 40, 80, 120, 160, 640, 900, 1280)
+fractioned_daily_AMT <- c(2.5, 5, 10, 20, 40, 80, 160, 320, 640, 1280)
 
 # Specify the number of simulated patients
 i_data <- expand.idata(ID = 1:1)
@@ -65,8 +65,8 @@ source("RScripts/pkpd_index_plots_script.R")
 
 pkpd_plot <- PKPD_index_plots(obs_data = data[["sim_data"]], 
                              pred_data = data[["pred_data"]], 
-                             title = "Reproduction of Andes PKPD Index for Linezolid - Non Linear PK" ,
-                             file_name = "Andes PKPD Index for Linezolid - Non Linear PK.png")
+                             title = "Reproduction of Andes PKPD Index for Linezolid - Linear PK" ,
+                             file_name = "Andes PKPD Index for Linezolid - Linear PK.png")
 ```
 
 ## PK & PD Analysis

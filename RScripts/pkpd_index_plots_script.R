@@ -49,7 +49,8 @@ PKPD_index_plots <- function(obs_data, pred_data, title, file_name) {
           strip.placement = "outside",
           axis.title.y = element_text(size = 12),
           strip.text.x = element_text(size = 12),
-          axis.title.x = element_blank()
+          axis.title.x = element_blank(),
+          legend.position = "bottom",
     ) +
     ggtitle(title)
   

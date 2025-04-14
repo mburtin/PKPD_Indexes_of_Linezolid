@@ -88,7 +88,11 @@ ggplot() +
 
 # Andes PK
 ```{r}
-mouse_model <- mread("model/Mouse_model_v2_IV")
+library(mrgsolve)
+library(tidyverse)
+andes_data <- read_csv("data/andes_data_AIO.csv")
+
+mouse_model <- mread("model/Mouse_model_v2_IV_NonLinear_PK")
 
 ev05 <- ev(ID = 80, amt = 80, tinf = 0.5, cmt ="CENTRAL")
 ev07 <- ev(ID = 20, amt = 20, tinf = 0.5, cmt = "CENTRAL")
@@ -105,7 +109,7 @@ ggplot() +
     geom_point(data = andes_data, aes(x = time, y = conc, color = factor(ID)), shape = 12) +
     scale_y_continuous(limits = c(0, 80), breaks = seq(0, 80, 10)) +
     scale_x_continuous(limits = c(0, 3)) +
-    labs(title = "Plasmatic concentration of Linezolid in mouse - Comparaison between PK simulation (plain lines) & Andes (square dots) / Sandberg (triangle dots) data",
+    labs(title = "Andes PK study - Non-linear PK",
          x = "Time (h)",
          y = "Concentration (mg/L)",
          color = "Dose") +
