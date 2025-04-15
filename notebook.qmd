@@ -260,7 +260,7 @@ csf_plot + csf_plot2 + plot_layout(nrow = 2, guides = 'collect') +
 
 ggsave(file.path(getwd(), "results", "600mg_atteignment - bacteriostasis.png"), width = 8, height = 4, dpi = 1200)
 
-## 600mg for a bacteriostatic effect (fAUC/MIC target = 30 & fT>MIC target = 63%)
+## 600mg for a bactericical effect (fAUC/MIC target = 30 & fT>MIC target = 63%)
 csf_plot3 <- PKPD_target_plots_600mg(obs_data = csf_data[["sim_data"]] |> 
                                   filter(DoseGroup == "fractioned_12h" & AMT == 1200), 
                                 pred_data = csf_data[["pred_data"]],

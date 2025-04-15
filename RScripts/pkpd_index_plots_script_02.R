@@ -5,6 +5,9 @@ PKPD_target_plots_600mg <- function(obs_data, pred_data, effect, auc_target, tmi
   require(ggplot2)        # Plotting
   require(ggh4x)          # Plotting (allow to set custom scales for each facet)
   
+  auc_atteignment = (nrow(obs_data |> filter(PKPD_Index == "I2_AUC") |> filter(value >= auc_target)) / nrow(obs_data |> filter(PKPD_Index == "I2_AUC")))*100
+  tmic_atteignment = (nrow(obs_data |> filter(PKPD_Index == "I3_ToverMIC") |> filter(value >= tmic_target)) / nrow(obs_data |> filter(PKPD_Index == "I3_ToverMIC")))*100
+  
   # Generate the plot
   ggplot(obs_data |> filter(PKPD_Index %in% c("I2_AUC", "I3_ToverMIC")), aes(x=value, y=deltaLog10CFU)) +
     geom_point(size = 0.25) +
@@ -34,6 +37,10 @@ PKPD_target_plots_600mg <- function(obs_data, pred_data, effect, auc_target, tmi
     geom_hline(yintercept = effect, linetype = "dotted") +
     geom_vline(data = obs_data |> filter(PKPD_Index == "I2_AUC"), aes(xintercept = auc_target), linetype = "dotted") +
     geom_vline(data = obs_data |> filter(PKPD_Index == "I3_ToverMIC"), aes(xintercept = tmic_target), linetype = "dotted") +
+    geom_text(data = obs_data |> filter(PKPD_Index == "I3_ToverMIC"), 
+              aes(x = 85, y = 4, label =  paste(round(tmic_atteignment, 0), "%")), size = 4, hjust = 0) +
+    geom_text(data = obs_data |> filter(PKPD_Index == "I2_AUC"), 
+              aes(x = 400, y = 4, label = paste(round(auc_atteignment, 0), "%")), size = 4, hjust = 0) +
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
           panel.background = element_rect(fill = "white", colour="black"),
@@ -54,6 +61,9 @@ PKPD_effect_plots_600mg <- function(obs_data, pred_data, effect, auc_target, tmi
   # Check if library are loaded
   require(ggplot2)        # Plotting
   require(ggh4x)          # Plotting (allow to set custom scales for each facet)
+  
+  auc_effect = (nrow(obs_data |> filter(PKPD_Index == "I2_AUC") |> filter(deltaLog10CFU <= effect)) / nrow(obs_data |> filter(PKPD_Index == "I2_AUC")))*100
+  tmic_effect = (nrow(obs_data |> filter(PKPD_Index == "I3_ToverMIC") |> filter(deltaLog10CFU <= effect)) / nrow(obs_data |> filter(PKPD_Index == "I3_ToverMIC")))*100
   
   # Generate the plot
   ggplot(obs_data |> filter(PKPD_Index %in% c("I2_AUC", "I3_ToverMIC")), aes(x=value, y=deltaLog10CFU)) +
@@ -84,6 +94,10 @@ PKPD_effect_plots_600mg <- function(obs_data, pred_data, effect, auc_target, tmi
     geom_hline(yintercept = effect, linetype = "dotted") +
     geom_vline(data = obs_data |> filter(PKPD_Index == "I2_AUC"), aes(xintercept = auc_target), linetype = "dotted") +
     geom_vline(data = obs_data |> filter(PKPD_Index == "I3_ToverMIC"), aes(xintercept = tmic_target), linetype = "dotted") +
+    geom_text(data = obs_data |> filter(PKPD_Index == "I3_ToverMIC"), 
+              aes(x = 85, y = 4, label =  paste(round(tmic_effect, 0), "%")), size = 4, hjust = 0) +
+    geom_text(data = obs_data |> filter(PKPD_Index == "I2_AUC"), 
+              aes(x = 400, y = 4, label = paste(round(auc_effect, 0), "%")), size = 4, hjust = 0) +
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
           panel.background = element_rect(fill = "white", colour="black"),
