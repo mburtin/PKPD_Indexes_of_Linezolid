@@ -5,7 +5,7 @@ PKPD_index_plots <- function(obs_data, pred_data, title, file_name) {
   
   # Generate the plot
   ggplot(obs_data, aes(x=value, y=deltaLog10CFU)) +  # Ajout de color = DoseGroup
-    geom_point(size=0.25, aes(colour = as.factor(DoseGroup))) +
+    geom_point(size=1, aes(colour = as.factor(DoseGroup))) +
     facet_wrap(~ PKPD_Index, scales = "free_x", strip.position = "bottom", nrow = 1, 
                labeller = labeller(
                  PKPD_Index = c(
