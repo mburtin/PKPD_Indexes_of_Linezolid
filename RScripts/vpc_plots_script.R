@@ -106,7 +106,7 @@ VPC_Plots <- function(data, file_name) {
     scale_x_continuous(
       limits = c(0, 100),
       breaks = c(0, 25, 50, 75, 100),
-      name = expression(T['>MIC']~'(%)')
+      name = expression(italic(f)*T['>MIC'] ~ '(%)')
     ) +
     scale_y_continuous(
       limits = c(-5.5, 6),
@@ -122,7 +122,7 @@ VPC_Plots <- function(data, file_name) {
       color = guide_legend(order = 2, ncol = 3),
       linetype = guide_legend(order = 1, ncol = 3)
     ) +
-    labs(x = "T>MIC (%)", y = NULL) +
+    labs(x = "fT>MIC (%)", y = NULL) +
     geom_text(aes(x = Inf, y = Inf, 
                   label = paste("R² = ", round(csf_data$correlation_data |> filter(PKPD_Index == "CSF_ToverMIC") |> pull(Rsq), 2))),
               hjust = 1.1, vjust = 3, size = 4, fontface = "italic", color = "black") +
