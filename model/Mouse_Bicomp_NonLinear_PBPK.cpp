@@ -14,7 +14,6 @@ V2    : 0.4   : Muscle volume (L/kg)
 Q     : 2.59  : Blood flow rate (L/h/kg)
 Vm    : 62.56 : Maximum elimination rate (L/h/kg)
 Km    : 50.86 : Michaelis constant (mg/L)
-FU    : 0.7   : Fraction unbound in plasma
 RBP   : 0.78  : Blood/plasma ratio
 Kp    : 0.63  : Tissue/plasma ratio
 
@@ -69,7 +68,7 @@ dxdt_MUSCLE = Q*RBP*(C_CENTRAL - (C_MUSCLE/Kp));
 
 // PD Equations
 double B    = S + Rp;
-double E    = (Emax * (1 - ARon) * (C_MUSCLE*FU)) / (C_MUSCLE*FU + EC50);
+double E    = (Emax * (1 - ARon) * (C_MUSCLE)) / (C_MUSCLE + EC50);
 double Ksr  = ((Kg - Kd) * B) / pow(10, Bmax);
 
 dxdt_S      = Kg*S - (E + Kd)*S - Ksr*S;
@@ -92,7 +91,7 @@ double Log10CFU   = log10(S + Rp);
 //////////////////////////////
 $CAPTURE @annotated
 C_CENTRAL     : Concentration in central compartment (mg/L)
-Log10CFU      : Variation of the bacterial count (log10, CFU/mL)
+Log10CFU      : Variation of the bacterial count (log10, CwFU/mL)
 Cmax_CENTRAL  : Maximal concentration in central compartment (mg/L)
 MIC           : Minimal inhibitory concentration (mg/L)
 B0            : Initial bacterial count (log10(CFU/ml))
