@@ -1,0 +1,177 @@
+---
+title: "Study of PK/PD Index for Linezolid specific to CSF infections"
+editor_options: 
+  chunk_output_type: console
+---
+
+## Settings & Dependencies
+
+Load necessary library, dependencies and settings for the project. Just run the block code to generate the same result than the article. Otherwise, if you want to play simulations, you can change the parameters, dosing regimens...
+
+```{r}
+#| echo: false
+
+####
+## Load dependencies
+####
+library(mrgsolve)       # Simulation package
+library(dplyr)          # Data manipulation
+library(tidyr)          # Data manipulation
+library(purrr)          # Data manipulation
+library(tibble)         # Data manipulation
+library(ggplot2)        # Plotting
+
+# If doesn't exist, create a folder for result plots
+if (!dir.exists("results")) {
+  dir.create("results")
+}
+
+# Define the maximum thread number to use for simulations
+thread_number = 9
+
+# Specify AMT choosen for fractioned doses
+fractioned_daily_AMT <- c(2.5, 5, 10, 20, 40, 80, 160, 320, 640, 1280)
+
+# Specify the number of simulated patients
+i_data <- expand.idata(ID = 1:1)
+
+####
+## Monocomp linear PK model
+####
+
+# Load the model
+model_file_linear <- mread("model/Mouse_Monocomp_IV_Linear_PK")
+
+# Specific model parameters for each strains
+model_list <- list(
+    # S. Aureus
+    SA6538p = param(model_file_linear, B0 = 6.3, Bmax = 9.26, Kg = 1.09,
+                    Emax = 1.93, EC50 = 1.1, Kon = 0.016, MIC = 2.0)
+)
+
+# Execute the main script
+source("RScripts/main_script_for_mouse_linear_model.R")
+
+####
+## Bicomp non linear PBPK model
+####
+
+# Load the model
+model_file_pbpk <- mread("model/Mouse_Bicomp_NonLinear_PBPK")
+
+# Specific model parameters for each strains
+model_list <- list(
+    # S. Aureus
+    SA6538p = param(model_file_pbpk, B0 = 6.3, Bmax = 9.26, Kg = 1.09,
+                    Emax = 1.93, EC50 = 1.1, Kon = 0.016, MIC = 2.0)
+)
+
+# Execute the main script
+source("RScripts/main_script_for_mouse_pbpk_model.R")
+
+mixed_data = left_join(linear_data, pbpk_data, by = c("STRN", "MIC", "DoseGroup", "ID", "AMT", "time", "B0", "PKPD_Index"))
+
+rm(fractioned_24h_full, fractioned_results, i_data, model_list, model_file_pbpk, model_file_linear, sim_formated_data, fractioned_daily_AMT, linear_data, pbpk_data)
+
+# Estimate the sigmoidal model
+source("RScripts/pkpd_fitting_script.R")
+
+corrCurve_data <- index_PKPD_fit_curve(mixed_data)
+
+generate_PKPD_fit_data <- function(data) {
+  
+  correlation_data <- data |>
+    unnest(c(data)) |> # Unwrap the main dataset
+    select(STRN, MIC, DoseGroup, ID, AMT, time, B0, PKPD_Index, value, deltaLog10CFU, Rsq) |>
+    filter(ID > 0) |>
+    # Facet_grid order by name, so this fix AUC/MIC displayed before Cmax
+    mutate(PKPD_Index = case_when(
+      PKPD_Index %in% c("CENTRAL_Cmax", "CSF_Cmax") ~ "I4_Cmax",
+      PKPD_Index %in% c("CENTRAL_AUC_MIC", "CSF_AUC_MIC") ~ "I2_AUC",
+      PKPD_Index %in% c("CENTRAL_ToverMIC", "CSF_ToverMIC") ~ "I3_ToverMIC",
+      TRUE ~ PKPD_Index
+    )) |>
+    ungroup()
+  
+  return(correlation_data)
+}
+
+mixed_data <- generate_PKPD_fit_data(corrCurve_data)
+
+# Generate pred_data for geom_line
+generate_pred_data <- function(data) {
+  
+  pred_data <- data |>
+    select(-c("data", "nls")) |> 
+    group_by(PKPD_Index, I0, Imax, IC50, H)  |>
+    expand(value = seq(0.1, 1000, 0.1)) |>
+    mutate(pred = Emax_model(value, I0, Imax, IC50, H)) |>
+    mutate(PKPD_Index = case_when(
+      PKPD_Index %in% c("CENTRAL_Cmax", "CSF_Cmax") ~ "I4_Cmax",
+      PKPD_Index %in% c("CENTRAL_AUC_MIC", "CSF_AUC_MIC") ~ "I2_AUC",
+      PKPD_Index %in% c("CENTRAL_ToverMIC", "CSF_ToverMIC") ~ "I3_ToverMIC",
+      TRUE ~ PKPD_Index
+    )) |> filter(!((PKPD_Index %in% c("I3_ToverMIC")) & value > 100)) |>
+    filter(!((PKPD_Index %in% c("I2_AUC")) & value < 10)) |>
+    filter(!((PKPD_Index %in% c("I4_Cmax")) & value < 1)) |>
+    ungroup()
+  
+  return(pred_data)
+}
+
+mixed_pred_data <- generate_pred_data(corrCurve_data)
+
+```
+
+## PKPD Plots generation
+
+The code below will generate PK/PD index plots for fCmax/MIC, fAUC/MIC and fT>MIC for CSF target.
+
+```{r}
+source("RScripts/pkpd_index_plots_script.R")
+
+pkpd_plot <- PKPD_index_plots(obs_data = mixed_data, 
+                             pred_data = mixed_pred_data, 
+                             title = "Reproduction of Andes PKPD Index for Linezolid - Linear Index vs effect from PBPK model" ,
+                             file_name = "Andes PKPD Index for Linezolid - PBPK technique.png")
+```
+
+## PK & PD Analysis
+
+```{r}
+## Summarize data
+summary_fractioned <- sim_results_fractioned[["fractioned_results"]][["SA6538p"]] |>
+  group_by(DoseGroup, AMT, time) |>
+  summarize(
+    C_CENTRAL = mean(C_CENTRAL),
+    Log10CFU = mean(Log10CFU)
+    )
+
+## PK plots
+### Plasma PK for fractioned doses
+summary_fractioned |>
+  filter(AMT != 0) |>
+  ggplot(aes(x = time, y = C_CENTRAL, color = as.factor(DoseGroup))) +
+  geom_line(linewidth = 0.75) +
+  facet_wrap(~AMT, ncol = 3, scales = "free_y") +
+  labs(
+    x = "Time (h)", 
+    y = "Linezolid concentrations (mg/L)", 
+    title = "Plasma PK of Linezolid in the mouse",
+    color = "Dosing regimens"
+  ) +
+  scale_x_continuous(breaks = seq(0, 24, 4))
+### PD for fractioned doses
+summary_fractioned |>
+  filter(AMT != 0) |>
+  ggplot(aes(x = time, y = Log10CFU, color = as.factor(DoseGroup))) +
+  geom_line(linewidth = 0.75) +
+  facet_wrap(~AMT, ncol = 3, scales = "free_y") +
+  labs(
+    x = "Time (h)", 
+    y = "Linezolid concentrations (mg/L)", 
+    title = "PD of Linezolid in the mouse",
+    color = "Dosing regimens"
+  ) +
+  scale_x_continuous(breaks = seq(0, 24, 4))
+```

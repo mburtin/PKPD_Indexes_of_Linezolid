@@ -14,14 +14,14 @@ PKPD_index_plots <- function(obs_data, pred_data, title, file_name) {
                    "I3_ToverMIC" = "T>MIC (%)"))) +
     facetted_pos_scales(
       x = list(
-        PKPD_Index == "I4_Cmax" ~ scale_x_continuous(limits = c(1, 1000),
+        PKPD_Index == "I4_Cmax" ~ scale_x_continuous(limits = c(0.75, 1300),
                                                      breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9,
                                                                 10, 20, 30, 40, 50, 60, 70, 80, 90, 
                                                                 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000),
                                                      trans="log10",
                                                      labels = function(x) ifelse(x %in% c(1, 10, 100, 1000), as.character(x), ""),
                                                      name = expression(Cmax/MIC)),
-        PKPD_Index == "I2_AUC" ~ scale_x_continuous(limits = c(10, 1000), 
+        PKPD_Index == "I2_AUC" ~ scale_x_continuous(limits = c(8, 1300), 
                                                     breaks = c(10, 20, 30, 40, 50, 60, 70, 80, 90, 
                                                                100, 200, 300, 400, 500, 600, 700, 800, 900, 1000),
                                                     labels = function(x) ifelse(x %in% c(10, 100, 1000), as.character(x), ""),
@@ -38,10 +38,11 @@ PKPD_index_plots <- function(obs_data, pred_data, title, file_name) {
               hjust = 1.2, vjust = 2, size = 4, fontface = "italic", color = "black") +
     scale_y_continuous(
       breaks = c(0, 1, 2, 3, 4, 5, 6, 7),
-      limits = c(0, 7),
+      limits = c(-0.5, 7),
       labels = c("0", "-1", "-2", "-3", "-4", "-5", "-6", "-7"),
       name = "Change in log10 CFU/ml"
     ) +
+    labs(color = "Dosing regimens") +
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
           panel.background = element_rect(fill = "white", colour="black"),
@@ -51,6 +52,7 @@ PKPD_index_plots <- function(obs_data, pred_data, title, file_name) {
           strip.text.x = element_text(size = 12),
           axis.title.x = element_blank(),
           legend.position = "bottom",
+          panel.spacing = unit(1.35, "lines")
     ) +
     ggtitle(title)
   
