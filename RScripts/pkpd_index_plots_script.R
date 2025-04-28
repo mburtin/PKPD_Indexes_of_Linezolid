@@ -52,7 +52,7 @@ PKPD_index_plots <- function(obs_data, pred_data, title, file_name) {
           strip.text.x = element_text(size = 12),
           axis.title.x = element_blank(),
           legend.position = "bottom",
-          panel.spacing = unit(1.35, "lines")
+          panel.spacing = unit(1.5, "lines")
     ) +
     ggtitle(title)
   

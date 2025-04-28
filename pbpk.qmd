@@ -132,7 +132,7 @@ source("RScripts/pkpd_index_plots_script.R")
 
 pkpd_plot <- PKPD_index_plots(obs_data = mixed_data, 
                              pred_data = mixed_pred_data, 
-                             title = "Reproduction of Andes PKPD Index for Linezolid - Linear Index vs effect from PBPK model" ,
+                             title = "Andes reproduction with linear PKPD Index and Bicomp PBPK Effect" ,
                              file_name = "Andes PKPD Index for Linezolid - PBPK technique.png")
 ```
 
