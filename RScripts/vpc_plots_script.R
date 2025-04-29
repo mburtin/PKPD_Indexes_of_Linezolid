@@ -1,4 +1,4 @@
-VPC_Plots <- function(data, file_name) {
+VPC_Plots <- function(data, file_name, Rsq_data) {
   require(ggplot2)
   require(patchwork)
   
@@ -38,7 +38,7 @@ VPC_Plots <- function(data, file_name) {
     ) +
     labs(x = "fCmax/MIC", y = expression(Delta~log[10]~'CFU/ml')) +
     geom_text(aes(x = Inf, y = Inf, 
-                  label = paste("R² = ", round(csf_data$correlation_data |> filter(PKPD_Index == "CSF_Cmax") |> pull(Rsq), 2))),
+                  label = paste("R² = ", round(Rsq_data$correlation_data |> filter(PKPD_Index %in% c("CENTRAL_Cmax", "CSF_Cmax")) |> pull(Rsq), 2))),
               hjust = 1.1, vjust = 3, size = 4, fontface = "italic", color = "black") +
     theme_minimal() +
     theme(plot.margin = margin(0, 0, 0, 0),
@@ -81,7 +81,7 @@ VPC_Plots <- function(data, file_name) {
     ) +
     labs(x = "fAUC/MIC", y = NULL) +
     geom_text(aes(x = Inf, y = Inf, 
-                  label = paste("R² = ", round(csf_data$correlation_data |> filter(PKPD_Index == "CSF_AUC_MIC") |> pull(Rsq), 2))),
+                  label = paste("R² = ", round(Rsq_data$correlation_data |> filter(PKPD_Index %in% c("CENTRAL_AUC_MIC", "CSF_AUC_MIC")) |> pull(Rsq), 2))),
               hjust = 1.1, vjust = 3, size = 4, fontface = "italic", color = "black") +
     theme_minimal() +
     theme(axis.text.y = element_blank(),
@@ -124,7 +124,7 @@ VPC_Plots <- function(data, file_name) {
     ) +
     labs(x = "fT>MIC (%)", y = NULL) +
     geom_text(aes(x = Inf, y = Inf, 
-                  label = paste("R² = ", round(csf_data$correlation_data |> filter(PKPD_Index == "CSF_ToverMIC") |> pull(Rsq), 2))),
+                  label = paste("R² = ", round(Rsq_data$correlation_data |> filter(PKPD_Index %in% c("CENTRAL_ToverMIC", "CSF_ToverMIC")) |> pull(Rsq), 2))),
               hjust = 1.1, vjust = 3, size = 4, fontface = "italic", color = "black") +
     theme_minimal() +
     theme(axis.text.y = element_blank(),
@@ -137,6 +137,6 @@ VPC_Plots <- function(data, file_name) {
     plot_layout(ncol = 3, guides = "collect") + 
     plot_annotation(theme = theme(legend.position = "top"))
   
-  ggsave(file.path(getwd(), "results", file_name), width = 9, height = 3, dpi = 1200)
+  ggsave(file.path(getwd(), "results", file_name), width = 9, height = 3, dpi = "retina")
   
 }
