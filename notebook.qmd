@@ -368,10 +368,9 @@ summary_fractioned |>
   filter(AMT != 0) |>
   ggplot(aes(x = time, y = Log10CFU, color = as.factor(DoseGroup))) +
   geom_line(linewidth = 0.75) +
-  facet_wrap(~AMT, ncol = 3, scales = "free_y") +
   labs(
     x = "Time (h)", 
-    y = "Linezolid concentrations (mg/L)", 
+    y = "Bacteria count (log10 CFU/mL)", 
     title = "CSF PD of Linezolid for q24h, q12h, q8h, q4h",
     color = "Dosing regimens"
   ) +
