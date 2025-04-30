@@ -11,9 +11,9 @@ Load necessary library, dependencies and settings for the project. Just run the 
 ```{r}
 #| echo: false
 
-####
-## Load dependencies
-####
+###############################################################
+##                     Load dependcies                       ##
+###############################################################
 library(mrgsolve)       # Simulation package
 library(dplyr)          # Data manipulation
 library(tidyr)          # Data manipulation
@@ -26,20 +26,20 @@ if (!dir.exists("results")) {
   dir.create("results")
 }
 
-# Load the model
-model_file <- mread("model/Mouse_model_v2_IV_Linear_PK")
-
-####
-## Specify your entries
-####
+###############################################################
+##                 Specify your settings                     ##
+###############################################################
 
 # Define the maximum thread number to use for simulations
 thread_number = 9
 
+# Load the model
+model_file <- mread("model/Mouse_model_v2_IV_Linear_PK")
+
 # Specific model parameters for each strains
 model_list <- list(
     # S. Aureus
-    SA6538p = param(model_file, B0 = 6.29, Bmax = 9.26, Kg = 1.09,
+    SA01943 = param(model_file, B0 = 6.3, Bmax = 9.26, Kg = 1.09,
                     Emax = 1.93, EC50 = 1.1, Kon = 0.016, MIC = 2.0)
 )
 
@@ -49,24 +49,21 @@ fractioned_daily_AMT <- c(2.5, 5, 10, 20, 40, 80, 160, 320, 640, 1280)
 # Specify the number of simulated patients
 i_data <- expand.idata(ID = 1:1)
 
-####
-## Execute the main script
-####
+# Plot parameters
+plot_title = "PK/PD index for Linezolid in the mouse"
+plot_filename = "results/PKPD_index_plot.png"
+
+###############################################################
+##                Execute the main script                    ##
+###############################################################
 source("RScripts/main_script_for_mouse.R")
 
-```
-
-## PKPD Plots generation
-
-The code below will generate PK/PD index plots for fCmax/MIC, fAUC/MIC and fT>MIC for CSF target.
-
-```{r}
 source("RScripts/pkpd_index_plots_script.R")
 
 pkpd_plot <- PKPD_index_plots(obs_data = data[["sim_data"]], 
                              pred_data = data[["pred_data"]], 
-                             title = "Reproduction of Andes PKPD Index for Linezolid - Linear PK" ,
-                             file_name = "Andes PKPD Index for Linezolid - Linear PK.png")
+                             title = plot_tile,
+                             file_name = plot_filename)
 ```
 
 ## PK & PD Analysis
@@ -80,7 +77,6 @@ summary_fractioned <- sim_results_fractioned[["fractioned_results"]][["SA6538p"]
     Log10CFU = mean(Log10CFU)
     )
 
-## PK plots
 ### Plasma PK for fractioned doses
 summary_fractioned |>
   filter(AMT != 0) |>
@@ -94,6 +90,7 @@ summary_fractioned |>
     color = "Dosing regimens"
   ) +
   scale_x_continuous(breaks = seq(0, 24, 4))
+
 ### PD for fractioned doses
 summary_fractioned |>
   filter(AMT != 0) |>
@@ -102,7 +99,7 @@ summary_fractioned |>
   facet_wrap(~AMT, ncol = 3, scales = "free_y") +
   labs(
     x = "Time (h)", 
-    y = "Linezolid concentrations (mg/L)", 
+    y = "Bacteria count (log10 CFU/ml)", 
     title = "PD of Linezolid in the mouse",
     color = "Dosing regimens"
   ) +

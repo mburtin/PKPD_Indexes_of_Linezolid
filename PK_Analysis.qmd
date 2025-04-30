@@ -7,28 +7,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r}
-#| echo: false
-#| include: false
-
-####
-## Load depencies
-####
-library(mrgsolve)       # Simulation package
-library(tidyverse)
-
-# If doesn't exist, create a folder for plots
-if (!dir.exists("results")) {
-  dir.create("results")
-}
-
-# Load all differents PK studies results
-bigelow_data <- read_csv("data/bigelow_data_AIO.csv")
-sandberg_data <- read_csv("data/sandberg_data_AIO.csv")
-andes_data <- read_csv("data/andes_data_AIO.csv")
-```
-
-Bioavailibility analysis
+Bigelow - Bioavailibility analysis
 ```{r}
 library(minpack.lm)
 
@@ -53,10 +32,13 @@ bioavailibility_model_02 <- nlsLM(f ~ Vmax * dose / (Km + dose),
 
 # Bigelow PK
 ```{r}
-# Load the model
-mouse_model <- mread("model/Mouse_model_bigelow")
+library(mrgsolve)
+library(ggplot2)
 
-## Bigelow results (PK)
+# Load the model
+mouse_model <- mread("model/Mouse_Bigelow")
+
+# Define doses
 ev01 <- ev(ID = 335, amt = 335, cmt = "A")
 ev02 <- ev(ID = 100, amt = 100, cmt = "A")
 ev03 <- ev(ID = 30, amt = 30, cmt = "A")
@@ -64,19 +46,23 @@ ev04 <- ev(ID = 10, amt = 10, cmt = "A")
 
 dose_list <- rbind(ev01@data, ev02@data, ev03@data, ev04@data)
 
+# Start simulations
 mouse_sim_01 <- mouse_model |>
     mrgsolve::data_set(dose_list) |>
     mrgsolve::mrgsim(delta = 0.1, end = 24) |>
     tibble::as_tibble()
 
-## GGplot of test with time in x and C_CENTRAL in y, and color by ID
+# Load the data
+bigelow_data <- read.csv("data/bigelow_data_AIO.csv")
+
+# Generate PK plots
 ggplot() +
     geom_line(data = mouse_sim_01, aes(x = time, y = C_CENTRAL, color = factor(ID))) +
     geom_line(data = bigelow_data, aes(x = time, y = conc, color = factor(ID)), linetype = "dashed") +
-    labs(title = "Plasmatic concentration of Linezolid in mouse",
+    labs(title = "Bigelow PK study - Oral Bicomp PK model - Plasma concentrations",
          x = "Time (h)",
          y = "Concentration (mg/L)",
-         color = "ID") +
+         color = "Doses") +
     scale_color_manual(values = c("335" = "purple", "100" = "cyan", "30" = "green4", "10" = "orange"), 
                        labels = c("335" = "335 mg/kg", "100" = "100 mg/kg", "30" = "30 mg/kg", "10" = "10 mg/kg")) +
     scale_y_continuous(breaks = c(0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000), limits = c(0.0001, 1000), trans = "log10", 
@@ -89,30 +75,74 @@ ggplot() +
 # Andes PK
 ```{r}
 library(mrgsolve)
-library(tidyverse)
-andes_data <- read_csv("data/andes_data_AIO.csv")
+library(ggplot2)
 
+# Load the data
+andes_data <- read.csv("data/andes_data_AIO.csv")
+
+# If we want to check another model, just change the model name in mread
 mouse_model <- mread("model/Mouse_model_v2_IV_NonLinear_PK")
 
+# Define doses
 ev05 <- ev(ID = 80, amt = 80, tinf = 0.5, cmt ="CENTRAL")
 ev07 <- ev(ID = 20, amt = 20, tinf = 0.5, cmt = "CENTRAL")
 subcut_dose <- rbind(ev05@data, ev07@data)
 
+# Start simulations
 mouse_sim_02 <- mouse_model |>
     mrgsolve::data_set(subcut_dose) |>
     mrgsolve::mrgsim(delta = 0.1, end = 24) |>
     tibble::as_tibble()
 
+# Generate PK plots
 ggplot() +
     geom_line(data = mouse_sim_02, aes(x = time, y = C_CENTRAL, color = factor(ID))) +
-  geom_line(data = andes_data, aes(x = time, y = conc, color = factor(ID)), linetype = "dashed") +
+    geom_line(data = andes_data, aes(x = time, y = conc, color = factor(ID)), linetype = "dashed") +
     geom_point(data = andes_data, aes(x = time, y = conc, color = factor(ID)), shape = 12) +
     scale_y_continuous(limits = c(0, 80), breaks = seq(0, 80, 10)) +
     scale_x_continuous(limits = c(0, 3)) +
-    labs(title = "Andes PK study - Non-linear PK",
+    labs(title = "Andes PK study - Non-linear PK model - Plasma concentrations",
          x = "Time (h)",
          y = "Concentration (mg/L)",
-         color = "Dose") +
+         color = "Doses") +
+    theme_minimal()
+
+```
+
+# Sandberg PK
+```{r}
+library(mrgsolve)
+library(ggplot2)
+
+# Load the data
+sandberg_data <- read.csv("data/sandberg_data_AIO.csv")
+
+# If we want to check another model, just change the model name in mread
+mouse_model <- mread("model/Mouse_model_v2_IV_NonLinear_PK")
+
+# Define doses
+ev05 <- ev(ID = 80, amt = 80, cmt ="CENTRAL")
+ev06 <- ev(ID = 40, amt = 40, cmt ="CENTRAL")
+ev07 <- ev(ID = 20, amt = 20, cmt = "CENTRAL")
+subcut_dose <- rbind(ev05@data, ev06@data, ev07@data)
+
+# Start simulations
+mouse_sim_02 <- mouse_model |>
+    mrgsolve::data_set(subcut_dose) |>
+    mrgsolve::mrgsim(delta = 0.1, end = 24) |>
+    tibble::as_tibble()
+
+# Generate PK plots
+ggplot() +
+    geom_line(data = mouse_sim_02, aes(x = time, y = C_CENTRAL, color = factor(ID))) +
+    geom_line(data = sandberg_data, aes(x = time, y = conc, color = factor(ID)), linetype = "dashed") +
+    geom_point(data = sandberg_data, aes(x = time, y = conc, color = factor(ID)), shape = 12) +
+    scale_y_continuous(limits = c(0, 80), breaks = seq(0, 80, 10)) +
+    scale_x_continuous(limits = c(0, 3)) +
+    labs(title = "Sandberg PK study - Non-linear PK model  - Plasma concentrations",
+         x = "Time (h)",
+         y = "Concentration (mg/L)",
+         color = "Doses") +
     theme_minimal()
 
 ```

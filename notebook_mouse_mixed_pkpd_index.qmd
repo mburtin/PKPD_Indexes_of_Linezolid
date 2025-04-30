@@ -11,9 +11,9 @@ Load necessary library, dependencies and settings for the project. Just run the 
 ```{r}
 #| echo: false
 
-####
-## Load dependencies
-####
+###############################################################
+##                     Load dependcies                       ##
+###############################################################
 library(mrgsolve)       # Simulation package
 library(dplyr)          # Data manipulation
 library(tidyr)          # Data manipulation
@@ -26,6 +26,10 @@ if (!dir.exists("results")) {
   dir.create("results")
 }
 
+###############################################################
+##                 Specify your settings                     ##
+###############################################################
+
 # Define the maximum thread number to use for simulations
 thread_number = 9
 
@@ -35,9 +39,13 @@ fractioned_daily_AMT <- c(2.5, 5, 10, 20, 40, 80, 160, 320, 640, 1280)
 # Specify the number of simulated patients
 i_data <- expand.idata(ID = 1:1)
 
-####
-## Monocomp linear PK model
-####
+# Plots parameters
+plot_title = "PKPD index for Linezolid in the mouse"
+plot_filename = "results/PKPD_index_mouse_linezolid.png"
+
+###############################################################
+##             Monocomp non linear model                     ##
+###############################################################
 
 # Load the model
 model_file_linear <- mread("model/Mouse_Monocomp_IV_Linear_PK")
@@ -45,16 +53,16 @@ model_file_linear <- mread("model/Mouse_Monocomp_IV_Linear_PK")
 # Specific model parameters for each strains
 model_list <- list(
     # S. Aureus
-    SA6538p = param(model_file_linear, B0 = 6.3, Bmax = 9.26, Kg = 1.09,
+    SA01943 = param(model_file_linear, B0 = 6.3, Bmax = 9.26, Kg = 1.09,
                     Emax = 1.93, EC50 = 1.1, Kon = 0.016, MIC = 2.0)
 )
 
 # Execute the main script
-source("RScripts/main_script_for_mouse_linear_model.R")
+source("RScripts/mouse_script_for_linear_mixed.R")
 
-####
-## Bicomp non linear PBPK model
-####
+###############################################################
+##             Bicomp non linear PBPK model                  ##
+###############################################################
 
 # Load the model
 model_file_pbpk <- mread("model/Mouse_Bicomp_NonLinear_PBPK")
@@ -62,22 +70,28 @@ model_file_pbpk <- mread("model/Mouse_Bicomp_NonLinear_PBPK")
 # Specific model parameters for each strains
 model_list <- list(
     # S. Aureus
-    SA6538p = param(model_file_pbpk, B0 = 6.3, Bmax = 9.26, Kg = 1.09,
+    SA01943 = param(model_file_pbpk, B0 = 6.3, Bmax = 9.26, Kg = 1.09,
                     Emax = 1.93, EC50 = 1.1, Kon = 0.016, MIC = 2.0)
 )
 
 # Execute the main script
-source("RScripts/main_script_for_mouse_pbpk_model.R")
+source("RScripts/mouse_script_for_pbpk_mixed.R")
 
+###############################################################
+##                     Post data treatment                   ##
+###############################################################
+
+# Merge PKPD Indices of linear model with the effects of PBPK model
 mixed_data = left_join(linear_data, pbpk_data, by = c("STRN", "MIC", "DoseGroup", "ID", "AMT", "time", "B0", "PKPD_Index"))
 
+# Clean the environment
 rm(fractioned_24h_full, fractioned_results, i_data, model_list, model_file_pbpk, model_file_linear, sim_formated_data, fractioned_daily_AMT, linear_data, pbpk_data)
 
 # Estimate the sigmoidal model
-source("RScripts/pkpd_fitting_script.R")
-
+source("RScripts/mouse_pkpd_fitting_script.R")
 corrCurve_data <- index_PKPD_fit_curve(mixed_data)
 
+# Format the data to recover deltaLog10CFU and Rsq
 generate_PKPD_fit_data <- function(data) {
   
   correlation_data <- data |>
@@ -98,7 +112,7 @@ generate_PKPD_fit_data <- function(data) {
 
 mixed_data <- generate_PKPD_fit_data(corrCurve_data)
 
-# Generate pred_data for geom_line
+# Generate predictions to plot the correlation curve
 generate_pred_data <- function(data) {
   
   pred_data <- data |>
@@ -121,22 +135,17 @@ generate_pred_data <- function(data) {
 
 mixed_pred_data <- generate_pred_data(corrCurve_data)
 
-```
-
-## PKPD Plots generation
-
-The code below will generate PK/PD index plots for fCmax/MIC, fAUC/MIC and fT>MIC for CSF target.
-
-```{r}
-source("RScripts/pkpd_index_plots_script.R")
+# Generate the PK/PD Indices plots
+source("RScripts/mouse_pkpd_index_plots_script.R")
 
 pkpd_plot <- PKPD_index_plots(obs_data = mixed_data, 
                              pred_data = mixed_pred_data, 
-                             title = "Andes reproduction with linear PKPD Index and Bicomp PBPK Effect" ,
-                             file_name = "Andes PKPD Index for Linezolid - PBPK technique.png")
+                             title = plot_title,
+                             file_name = plot_filename)
+
 ```
 
-## PK & PD Analysis
+## PK & PD Intermediate Analysis
 
 ```{r}
 ## Summarize data
@@ -147,7 +156,6 @@ summary_fractioned <- sim_results_fractioned[["fractioned_results"]][["SA6538p"]
     Log10CFU = mean(Log10CFU)
     )
 
-## PK plots
 ### Plasma PK for fractioned doses
 summary_fractioned |>
   filter(AMT != 0) |>
@@ -161,6 +169,7 @@ summary_fractioned |>
     color = "Dosing regimens"
   ) +
   scale_x_continuous(breaks = seq(0, 24, 4))
+
 ### PD for fractioned doses
 summary_fractioned |>
   filter(AMT != 0) |>
@@ -169,7 +178,7 @@ summary_fractioned |>
   facet_wrap(~AMT, ncol = 3, scales = "free_y") +
   labs(
     x = "Time (h)", 
-    y = "Linezolid concentrations (mg/L)", 
+    y = "Bacteria count (log10 CFU/ml)", 
     title = "PD of Linezolid in the mouse",
     color = "Dosing regimens"
   ) +
