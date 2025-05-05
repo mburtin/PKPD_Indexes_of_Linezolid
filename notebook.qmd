@@ -34,7 +34,7 @@ model_file <- mread("model/Linezolid_PKPD_model")
 ####
 
 # Define the maximum thread number to use for simulations
-thread_number = 9
+thread_number = 6
 
 # These PK parameters will be used later in the Rscripts.
 # So we define them here, to avoid to hardcode values.
@@ -136,11 +136,26 @@ binned_data <- list(
 ```
 
 ```{r}
+source("RScripts/vpc_script_new.R")
+
+## Generate VPC binned data
+binned_data_new <- list(
+  cmax_obs = csf_vpc_obs_data$cmax,
+  auc_obs = csf_vpc_obs_data$auc,
+  tmic_obs = csf_vpc_obs_data$tmic,
+  
+  cmax_sim = csf_vpc_pred_data$cmax,
+  auc_sim = csf_vpc_pred_data$auc,
+  tmic_sim = csf_vpc_pred_data$tmic
+)
+```
+
+```{r}
 source("RScripts/vpc_plots_script.R")
 
 ## Generate VPC plots
-VPC_Plots(binned_data, "VPC - CSF with plasma indices.png", csf_with_plasma_index_data)
-#VPC_Plots(binned_data, "VPC - CSF.png", csf_data)
+#VPC_Plots(binned_data, "VPC - CSF with plasma indices.png", csf_with_plasma_index_data)
+VPC_Plots(binned_data, "VPC - CSF.png", csf_data)
 ```
 
 ## Target estimations for each indexes
