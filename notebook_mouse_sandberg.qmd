@@ -1,0 +1,128 @@
+---
+author: Michael BURTIN
+editor_options: 
+  chunk_output_type: console
+---
+
+## Settings & Dependencies
+
+Load necessary library, dependencies and settings for the project. Just run the block code to generate the same result than the article. Otherwise, if you want to play simulations, you can change the parameters, dosing regimens...
+
+```{r}
+#| echo: false
+
+###############################################################
+##                     Load dependcies                       ##
+###############################################################
+library(mrgsolve)       # Simulation package
+library(dplyr)          # Data manipulation
+library(tidyr)          # Data manipulation
+library(purrr)          # Data manipulation
+library(tibble)         # Data manipulation
+library(ggplot2)        # Plotting
+
+# If doesn't exist, create a folder for result plots
+if (!dir.exists("results")) {
+  dir.create("results")
+}
+
+###############################################################
+##                 Specify your settings                     ##
+###############################################################
+
+# Define the maximum thread number to use for simulations
+thread_number = 9
+
+# Load the model
+model_file <- mread("model/andes/Monocomp_IV_Linear_CL")
+
+# Specific model parameters for each strains
+model_list <- list(
+    # S. Aureus
+    SA01943 = param(model_file, B0 = 6.3, Bmax = 9.26, Kg = 1.09,
+                    Emax = 1.93, EC50 = 1.1, Kon = 0.016, MIC = 2.0)
+)
+
+# Dose list by sandberg
+dose0 <- ev(ID = 0, amt = 0, ii= 24, addl = 0, cmt ="A")
+dose1 <- ev(ID = 1, amt = 72, ii= 24, addl = 0, cmt ="A")
+dose2 <- ev(ID = 2, amt = 80, ii= 12, addl = 1, cmt ="A")
+dose3 <- ev(ID = 3, amt = 60, ii= 12, addl = 1, cmt ="A")
+dose4 <- ev(ID = 4, amt = 44, ii= 12, addl = 1, cmt ="A")
+dose5 <- ev(ID = 5, amt = 72, ii= 8, addl = 2, cmt ="A")
+dose6 <- ev(ID = 6, amt = 80, ii= 6, addl = 3, cmt ="A")
+dose7 <- ev(ID = 7, amt = 72, ii= 6, addl = 3, cmt ="A")
+dose8 <- ev(ID = 8, amt = 60, ii= 6, addl = 3, cmt ="A")
+dose9 <- ev(ID = 9, amt = 48, ii= 6, addl = 3, cmt ="A")
+dose10 <- ev(ID = 10, amt = 60, ii= 4, addl = 5, cmt ="A")
+dose11 <- ev(ID = 11, amt = 44, ii= 4, addl = 5, cmt ="A")
+dose12 <- ev(ID = 12, amt = 36, ii= 4, addl = 5, cmt ="A")
+dose13 <- ev(ID = 13, amt = 24, ii= 4, addl = 5, cmt ="A")
+dose14 <- ev(ID = 14, amt = 16, ii= 4, addl = 5, cmt ="A")
+
+subcut_dose = rbind(dose0@data, dose1@data, dose2@data, dose3@data, dose4@data, 
+                    dose5@data, dose6@data, dose7@data, dose8@data,
+                    dose9@data, dose10@data, dose11@data, dose12@data,
+                    dose13@data, dose14@data)
+
+rm(dose0, dose1, dose2, dose3, dose4, dose5, dose6, dose7, dose8,
+   dose9, dose10, dose11, dose12, dose13, dose14)
+
+# Specify the number of simulated patients
+i_data <- expand.idata(ID = 1:1)
+
+# Plot parameters
+plot_title = "Sandberg study - Linezolid PK/PD index - Monocomp linear CL"
+plot_filename = "Sandberg - PKPD_index - Monocomp linear CL.png"
+
+###############################################################
+##                Execute the main script                    ##
+###############################################################
+source("RScripts/mouse_main_script_for_mouse.R")
+source("RScripts/mouse_pkpd_index_plots_script.R")
+
+pkpd_plot <- PKPD_index_plots(obs_data = data[["sim_data"]], 
+                             pred_data = data[["pred_data"]], 
+                             title = plot_title,
+                             file_name = plot_filename)
+```
+
+## PK & PD Analysis
+
+```{r}
+## Summarize data
+summary_fractioned <- sim_results_fractioned[["fractioned_results"]][["SA01943"]] |>
+  group_by(DoseGroup, AMT, time) |>
+  summarize(
+    C_CENTRAL = mean(C_CENTRAL),
+    Log10CFU = mean(Log10CFU)
+    )
+
+### Plasma PK for fractioned doses
+summary_fractioned |>
+  filter(AMT != 0) |>
+  ggplot(aes(x = time, y = C_CENTRAL, color = as.factor(DoseGroup))) +
+  geom_line(linewidth = 0.75) +
+  facet_wrap(~AMT, ncol = 3, scales = "free_y") +
+  labs(
+    x = "Time (h)", 
+    y = "Linezolid concentrations (mg/L)", 
+    title = "Plasma PK of Linezolid in the mouse",
+    color = "Dosing regimens"
+  ) +
+  scale_x_continuous(breaks = seq(0, 24, 4))
+
+### PD for fractioned doses
+summary_fractioned |>
+  filter(AMT != 0) |>
+  ggplot(aes(x = time, y = Log10CFU, color = as.factor(DoseGroup))) +
+  geom_line(linewidth = 0.75) +
+  facet_wrap(~AMT, ncol = 3, scales = "free_y") +
+  labs(
+    x = "Time (h)", 
+    y = "Bacteria count (log10 CFU/ml)", 
+    title = "PD of Linezolid in the mouse",
+    color = "Dosing regimens"
+  ) +
+  scale_x_continuous(breaks = seq(0, 24, 4))
+```

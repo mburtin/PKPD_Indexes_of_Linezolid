@@ -1,0 +1,48 @@
+DESCRIPTION:
+TKC model SA29213 Run 063 in Files MHB/All data
+
+The PD model is a direct model with adaptative resistance. There is two populations type : one growing and drug-susceptible population (S) and one resting and drug-insusceptible population (R). The total bacterial (B) content in the system (S + R). The adaptative resistance is described by two compartment one with no adaptative resistance (ARoff) and one with presence of adaptative resistance (ARon).
+The effect (E) corresponds to stimulation of death.
+B0 = Inoculum (log10(CFU/mL))
+Bmax = Plateau (log10(CFU/mL))
+B = Total bacterial (CFU/mL)
+Emax = Maximal rate of effect (h-1)
+EC50_S = LNZ concentration needed to reach 50% of Emax for population S (mg/L) 
+EC50_R = LNZ concentration needed to reach 50% of Emax for population R (mg/L) 
+kon = rate constant for development of adaptative resistance (h-1)
+koff = rate constant for return to suceptibility (h-1)
+
+[LONGITUDINAL]
+input={B0, Bmax, Kg, Emax, EC50, AMT}
+AMT = {use = regressor}
+
+PK:
+
+EQUATION:
+; Initial values
+t_0 = 0
+S_0 = 10^B0 ; DV are in log10 but we want calculation in CFU/mL log(x) = a <-> x = 10^a
+R_0 = 0
+
+; PD definitions
+B = S + R
+Kd = 0
+
+Ksr = (((Kg - Kd) * B) / 10^Bmax) ; equation from PK-PD Modeling of Antibacterial Drugs. Nielsen and Friberg (serves as plateau).
+
+Krs = 0 
+koff = 0 ; always under antibiotic pressure
+
+; Effect model - Emax
+E = (Emax * Conc) / (Conc + EC50) ; CENTRAL = Amount dose = mg/L for TKC
+
+; ODEs
+ddt_S = Kg * S - (Kd + E) * S - Ksr * S + Krs * R 
+ddt_R = Ksr * S - Krs * R - Kd * R
+
+; Scale factor
+LogB = log10(B)
+
+OUTPUT:
+output = {LogB}
+table = {Conc}

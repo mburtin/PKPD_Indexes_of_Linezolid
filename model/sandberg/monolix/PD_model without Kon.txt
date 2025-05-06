@@ -1,0 +1,49 @@
+DESCRIPTION: 
+PD model Persistent bacteria. Nielsen et al. Semimechanistic Pharmacokinetic/Pharmacodynamic Model for Assessment of Activity of Antibacterial Agents from Time-Kill Curve Experiments.
+
+The PD model is a direct model with two populations type : one growing and drug-susceptible population (S) and one resting and drug-insusceptible population (R). The total bacterial (B) content in the system (S + R) stimulates the transfer from the normally growing stage into the resting stage (Ksr).
+A rate constant growth is caracterized by (Kg) only on population S and the rate constant death by (Kd) on both populations.
+
+The effect (E) corresponds to stimulation of death.
+B0 = Inoculum (log10(CFU/mL))
+Bmax = Plateau ((log10(CFU/mL))
+B = Total bacterial (CFU/mL)
+Emax = Maximal rate of effect (h^-1)
+EC50 = LNZ concentration needed to reach 50% of Emax(mg/L)
+Cc = Antibiotic concentration (mg/L)
+
+[LONGITUDINAL]
+input={Kg, B0, Bmax, Emax, EC50, LNZ}
+LNZ = {use=regressor}
+
+
+PK:
+
+EQUATION:
+;Initial values
+S_0 = 10^B0 ; log(x) = a -> x = 10^a
+R_0 = 0 
+
+;Bacterial Plateau
+B = S + R 
+Kd = 0
+Knet = Kg - Kd
+Ksr = (Knet * B) / 10^Bmax ; equation from PK-PD Modeling of Antibacterial Drugs. Nielsen and Friberg.
+Krs = 0 
+
+
+;Antibiotic concentration
+Cc = LNZ
+
+;Drug effect - Emax model 
+E = (Emax * Cc) / (Cc + EC50)
+
+;ODE
+ddt_S = Kg * S - (Kd + E) * S - Ksr * S + Krs * R 
+ddt_R = Ksr * S - Krs * R - Kd * R
+
+;Log transformation
+LogB = log10(B)
+
+OUTPUT:
+output = {LogB}

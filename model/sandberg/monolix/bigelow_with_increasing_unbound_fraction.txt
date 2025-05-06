@@ -1,0 +1,35 @@
+DESCRIPTION:
+The administration is extravascular with a first order absorption (rate constant ka).
+The PK model has a central compartment (volume V1), a peripheral compartment (volume V2, intercompartmental clearance Q), and a Michaelis-Menten elimination (Vm, Km).
+
+[LONGITUDINAL]
+input = {Ka, V1, Q, V2, Cl, Vm, Km, F1, F2}
+
+EQUATION:
+odeType = stiff
+
+Ac_0 = 0
+Central_0 = 0
+Peripheral_0 = 0
+
+if(amtDose <= 40)
+	F = F1
+else
+	F = F2;
+end
+
+k12 = Q/V1
+k21 = Q/V2
+k10 = Cl/V1
+
+ddt_Ac = -Ka*Ac*F
+ddt_Central = Ka*Ac*F -k12*Central + k21*Peripheral - k10*Central - (Vm*(Central/V1)/(Km + (Central/V1)))
+ddt_Peripheral = k12*Central - k21*Peripheral
+
+Cc = Central/V1
+
+PK:
+depot(target = Ac)
+
+OUTPUT:
+output = {Cc}
