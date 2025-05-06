@@ -34,7 +34,7 @@ if (!dir.exists("results")) {
 thread_number = 9
 
 # Load the model
-model_file <- mread("model/Mouse_model_v2_IV_Linear_PK")
+model_file <- mread("model/andes/Monocomp_IV_Linear_CL")
 
 # Specific model parameters for each strains
 model_list <- list(
@@ -50,19 +50,18 @@ fractioned_daily_AMT <- c(2.5, 5, 10, 20, 40, 80, 160, 320, 640, 1280)
 i_data <- expand.idata(ID = 1:1)
 
 # Plot parameters
-plot_title = "PK/PD index for Linezolid in the mouse"
-plot_filename = "results/PKPD_index_plot.png"
+plot_title = "Mouse study - Linezolid PK/PD index - Monocomp linear CL"
+plot_filename = "PKPD_index - Monocomp linear CL.png"
 
 ###############################################################
 ##                Execute the main script                    ##
 ###############################################################
-source("RScripts/main_script_for_mouse.R")
-
-source("RScripts/pkpd_index_plots_script.R")
+source("RScripts/mouse_main_script_for_mouse.R")
+source("RScripts/mouse_pkpd_index_plots_script.R")
 
 pkpd_plot <- PKPD_index_plots(obs_data = data[["sim_data"]], 
                              pred_data = data[["pred_data"]], 
-                             title = plot_tile,
+                             title = plot_title,
                              file_name = plot_filename)
 ```
 

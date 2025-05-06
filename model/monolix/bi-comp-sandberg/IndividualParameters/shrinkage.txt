@@ -1,9 +1,0 @@
-parameters,shrinkage_mode
-V1,nan
-V2,nan
-Q,nan
-Cl,nan
-Vm,nan
-Km,nan
-ka,nan
-F,nan

@@ -36,7 +36,7 @@ library(mrgsolve)
 library(ggplot2)
 
 # Load the model
-mouse_model <- mread("model/Mouse_Bigelow")
+mouse_model <- mread("model/Bigelow_bicomp_oral")
 
 # Define doses
 ev01 <- ev(ID = 335, amt = 335, cmt = "A")
@@ -68,7 +68,9 @@ ggplot() +
     scale_y_continuous(breaks = c(0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000), limits = c(0.0001, 1000), trans = "log10", 
                        labels = c("0.0001", "0.001", "0.01", "0.1", "1", "10",  "100", "1000")) +
     scale_x_continuous(breaks = seq(0, 24, 4)) +
-    theme_minimal()
+    theme_classic()
+
+ggsave(file.path(getwd(), "results/mouse", "Bigelow - PK Analysis.png"), dpi = "retina")
 
 ```
 
@@ -81,7 +83,7 @@ library(ggplot2)
 andes_data <- read.csv("data/andes_data_AIO.csv")
 
 # If we want to check another model, just change the model name in mread
-mouse_model <- mread("model/Mouse_model_v2_IV_NonLinear_PK")
+mouse_model <- mread("model/andes/Monocomp_IV_NonLinear_CL")
 
 # Define doses
 ev05 <- ev(ID = 80, amt = 80, tinf = 0.5, cmt ="CENTRAL")
@@ -101,11 +103,13 @@ ggplot() +
     geom_point(data = andes_data, aes(x = time, y = conc, color = factor(ID)), shape = 12) +
     scale_y_continuous(limits = c(0, 80), breaks = seq(0, 80, 10)) +
     scale_x_continuous(limits = c(0, 3)) +
-    labs(title = "Andes PK study - Non-linear PK model - Plasma concentrations",
+    labs(title = "Andes PK study - Monocomp Non Linear CL - Plasma concentrations",
          x = "Time (h)",
          y = "Concentration (mg/L)",
          color = "Doses") +
-    theme_minimal()
+    theme_classic()
+
+ggsave(file.path(getwd(), "results/mouse", "Andes - PK Analysis - Monocomp non linear CL.png"), dpi = "retina")
 
 ```
 
@@ -118,7 +122,7 @@ library(ggplot2)
 sandberg_data <- read.csv("data/sandberg_data_AIO.csv")
 
 # If we want to check another model, just change the model name in mread
-mouse_model <- mread("model/Mouse_model_v2_IV_NonLinear_PK")
+mouse_model <- mread("model/sandberg/Monocomp_IV_Linear_CL")
 
 # Define doses
 ev05 <- ev(ID = 80, amt = 80, cmt ="CENTRAL")
@@ -143,6 +147,8 @@ ggplot() +
          x = "Time (h)",
          y = "Concentration (mg/L)",
          color = "Doses") +
-    theme_minimal()
+    theme_classic()
+
+ggsave(file.path(getwd(), "results/mouse", "Sandberg - PK Analysis - Monocomp non linear CL.png"), dpi = "retina")
 
 ```

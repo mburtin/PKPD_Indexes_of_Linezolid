@@ -1,0 +1,24 @@
+DESCRIPTION:
+The administration is extravascular with a first order absorption (rate constant ka).
+The PK model has a central compartment (volume V1), a peripheral compartment (volume V2, intercompartmental clearance Q), and a Michaelis-Menten elimination (Vm, Km).
+
+[LONGITUDINAL]
+input = {V1, Q, V2, Vm, Km, RBP, Kp}
+
+PK:
+depot(target=CENTRAL)
+
+EQUATION:
+odeType = stiff
+
+CENTRAL_0 = 0
+MUSCLE_0 = 0
+
+Cc = CENTRAL/V1;
+Cm = MUSCLE/V2;
+
+ddt_CENTRAL = -(Vm*(CENTRAL/V1)/(Km + (CENTRAL/V1))) - Q*RBP*Cc + Q*RBP*(Cm/Kp)
+ddt_MUSCLE = Q*RBP*Cc - Q*RBP*(Cm/Kp)
+
+OUTPUT:
+output = {Cc}

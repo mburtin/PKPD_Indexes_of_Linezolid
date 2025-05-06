@@ -119,7 +119,7 @@ sim_data <- sim_formated_data |> filter(PKPD_Index %in% c("CENTRAL_Cmax", "CENTR
 # This model will be used to generate the correlation curve. We will also 
 # determine R-square and Target attainment for each indexes by DeltaMethods.
 
-source("RScripts/pkpd_fitting_script.R")
+source("RScripts/mouse_pkpd_fitting_script.R")
 
 generate_PKPD_fit_data <- function(data) {
   

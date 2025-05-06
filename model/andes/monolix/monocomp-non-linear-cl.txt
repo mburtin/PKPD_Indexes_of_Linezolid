@@ -1,0 +1,16 @@
+DESCRIPTION:
+The administration is via an infusion (requires INFUSION RATE or INFUSION DURATION column-type in the data set).
+The PK model has one compartment (volume V) and a Michaelis-Menten elimination (Vm, Km).
+
+[LONGITUDINAL]
+input = {V, Vm, Km}
+
+EQUATION:
+odeType = stiff
+
+PK:
+; PK model definition
+Cc = pkmodel(V, Vm, Km)
+
+OUTPUT:
+output = {Cc}

@@ -62,5 +62,5 @@ PKPD_index_plots <- function(obs_data, pred_data, title, file_name) {
   }
   
   # Save the plot
-  ggsave(file.path(getwd(), "results", file_name), width = 7.5, height = 4, units = "in", dpi = 1200)
+  ggsave(file.path(getwd(), "results/mouse", file_name), width = 7.5, height = 4, units = "in", dpi = "retina")
 }
