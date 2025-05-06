@@ -48,7 +48,7 @@ index_PKPD_fit_curve <- function(data) {
   require(car)          # DeltaMethod
   
   ## Format the data
-  nestedData <- data |> mutate(deltaLog10CFU = MaxCFU - Log10CFU) |>  group_by(PKPD_Index) |> nest()
+  nestedData <- data |>  group_by(STRN) |> mutate(deltaLog10CFU = MaxCFU - Log10CFU) |>  group_by(STRN, PKPD_Index) |> nest()
   
   ## Model fitting with NLS
   nestedData$nls <-

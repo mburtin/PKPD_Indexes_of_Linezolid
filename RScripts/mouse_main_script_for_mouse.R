@@ -109,7 +109,9 @@ sim_formated_data <- bind_rows(fractioned_24h_full) |>
   ungroup()
 
 # Split sim_formated_data for each target, and reorder columns
-sim_data <- sim_formated_data |> filter(PKPD_Index %in% c("CENTRAL_Cmax", "CENTRAL_AUC_MIC", "CENTRAL_ToverMIC")) |> mutate(MaxCFU = max(Log10CFU))
+sim_data <- sim_formated_data |>
+  group_by(STRN) |>
+  mutate(MaxCFU = max(Log10CFU))
 
 #############################################################################
 ###########          Estimation of correlation parameters         ###########                       
@@ -157,7 +159,7 @@ generate_pred_data <- function(data) {
   
   pred_data <- data |>
     select(-c("data", "nls")) |> 
-    group_by(PKPD_Index, I0, Imax, IC50, H)  |>
+    group_by(STRN, PKPD_Index, I0, Imax, IC50, H)  |>
     expand(value = seq(0.1, 1000, 0.1)) |>
     mutate(pred = Emax_model(value, I0, Imax, IC50, H)) |>
     mutate(PKPD_Index = case_when(

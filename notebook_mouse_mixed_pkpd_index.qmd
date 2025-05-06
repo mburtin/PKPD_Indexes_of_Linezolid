@@ -117,7 +117,7 @@ generate_pred_data <- function(data) {
   
   pred_data <- data |>
     select(-c("data", "nls")) |> 
-    group_by(PKPD_Index, I0, Imax, IC50, H)  |>
+    group_by(STRN, PKPD_Index, I0, Imax, IC50, H)  |>
     expand(value = seq(0.1, 1000, 0.1)) |>
     mutate(pred = Emax_model(value, I0, Imax, IC50, H)) |>
     mutate(PKPD_Index = case_when(
