@@ -1,5 +1,5 @@
 ---
-title: "Study of PK/PD Index for Linezolid specific to CSF infections"
+author: Michael BURTIN
 editor_options: 
   chunk_output_type: console
 ---
@@ -40,15 +40,15 @@ fractioned_daily_AMT <- c(2.5, 5, 10, 20, 40, 80, 160, 320, 640, 1280)
 i_data <- expand.idata(ID = 1:1)
 
 # Plots parameters
-plot_title = "PKPD index for Linezolid in the mouse"
-plot_filename = "results/PKPD_index_mouse_linezolid.png"
+plot_title = "Mouse study - Linezolid PK/PD index - Mixed PBPK effect and linear CL Indices"
+plot_filename = "Andes - PKPD_index - Mixed PBPK effect and linear CL Indices.png"
 
 ###############################################################
 ##             Monocomp non linear model                     ##
 ###############################################################
 
 # Load the model
-model_file_linear <- mread("model/Mouse_Monocomp_IV_Linear_PK")
+model_file_linear <- mread("model/andes/Monocomp_IV_Linear_CL")
 
 # Specific model parameters for each strains
 model_list <- list(
@@ -65,7 +65,7 @@ source("RScripts/mouse_script_for_linear_mixed.R")
 ###############################################################
 
 # Load the model
-model_file_pbpk <- mread("model/Mouse_Bicomp_NonLinear_PBPK")
+model_file_pbpk <- mread("model/andes/Bicomp_PBPK_NonLinear_CL")
 
 # Specific model parameters for each strains
 model_list <- list(
@@ -149,7 +149,7 @@ pkpd_plot <- PKPD_index_plots(obs_data = mixed_data,
 
 ```{r}
 ## Summarize data
-summary_fractioned <- sim_results_fractioned[["fractioned_results"]][["SA6538p"]] |>
+summary_fractioned <- sim_results_fractioned[["fractioned_results"]][["SA01943"]] |>
   group_by(DoseGroup, AMT, time) |>
   summarize(
     C_CENTRAL = mean(C_CENTRAL),

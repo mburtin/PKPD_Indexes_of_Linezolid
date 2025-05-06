@@ -1,5 +1,5 @@
 ---
-title: "Study of PK/PD Index for Linezolid specific to CSF infections"
+author: Michael BURTIN
 editor_options: 
   chunk_output_type: console
 ---
@@ -51,7 +51,7 @@ i_data <- expand.idata(ID = 1:1)
 
 # Plot parameters
 plot_title = "Mouse study - Linezolid PK/PD index - Monocomp linear CL"
-plot_filename = "PKPD_index - Monocomp linear CL.png"
+plot_filename = "Andes - PKPD_index - Monocomp linear CL.png"
 
 ###############################################################
 ##                Execute the main script                    ##
@@ -69,7 +69,7 @@ pkpd_plot <- PKPD_index_plots(obs_data = data[["sim_data"]],
 
 ```{r}
 ## Summarize data
-summary_fractioned <- sim_results_fractioned[["fractioned_results"]][["SA6538p"]] |>
+summary_fractioned <- sim_results_fractioned[["fractioned_results"]][["SA01943"]] |>
   group_by(DoseGroup, AMT, time) |>
   summarize(
     C_CENTRAL = mean(C_CENTRAL),

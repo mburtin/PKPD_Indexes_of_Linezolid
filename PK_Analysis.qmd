@@ -1,8 +1,5 @@
 ---
-title: "XXXX"
 author: Michael BURTIN
-format: html
-editor: source
 editor_options: 
   chunk_output_type: console
 ---
