@@ -1,3 +1,7 @@
+# Record execution time
+library(tictoc)
+tic()
+
 #######
 ##  Generic functions
 ######
@@ -29,6 +33,8 @@ generate_obs_data <- function(data, pkpd_index, n_bins = 20) {
   if (any(is.na(x))) {
     stop("NA values in obs_data")
   }
+  
+  message(paste0(" - Empirical data completed for ", pkpd_index))
   
   return(x)
 }
@@ -103,7 +109,7 @@ generate_pred_data_replicates <- function(sim_data, obs_data, pkpd_index, n_repl
       ic_95 = quantile(value, 0.95)
     )
   
-  message(paste0(" - Generation completed for ", pkpd_index))
+  message(paste0(" - Predictions data completed for ", pkpd_index))
   
   return(result)
 }
@@ -137,4 +143,6 @@ csf_vpc_pred_data <- list(
                                           n_bins = 20)
 )
 
-message("VPC data generation completed")
+# Stop recording time execution
+elapsed <- toc(quiet = TRUE)
+message("VPC data generated in: ", round(elapsed$toc - elapsed$tic, 0), " seconds")
