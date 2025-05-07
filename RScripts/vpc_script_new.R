@@ -11,7 +11,7 @@ generate_obs_data <- function(data, pkpd_index, n_bins = 20) {
   # Use cut for ToverMIC, ntile for others
   if (pkpd_index == "I3_ToverMIC") {
     x <- x |>
-      mutate(bin = cut(value, breaks = seq(0, 100, by = 5), right = FALSE))
+      mutate(bin = cut(value, breaks = seq(0, 100, by = 20), right = FALSE))
   } else {
     x <- x |>
       mutate(bin = ntile(value, n_bins))
@@ -63,7 +63,7 @@ generate_pred_data <- function(sim_data, obs_data, pkpd_index, n_bins = 20) {
   # Use cut for ToverMIC, ntile for others
   if (pkpd_index == "I3_ToverMIC") {
     x <- x |>
-      mutate(bin = cut(value, breaks = seq(0, 100, by = 5), right = FALSE))
+      mutate(bin = cut(value, breaks = seq(0, 100, by = 20), right = FALSE))
   } else {
     x <- x |>
       mutate(bin = ntile(value, n_bins))
@@ -95,11 +95,12 @@ generate_pred_data_replicates <- function(sim_data, obs_data, pkpd_index, n_repl
   
   # Calculate percentiles between each percentiles of all bins/replicates
   result <- replicates |>
-    group_by(bin, x_mean) |>
+    pivot_longer(cols = c(p5, p50, p95), names_to = "percentile", values_to = "value") |>
+    group_by(percentile, bin, x_mean) |>
     summarize(
-      ic_05 = quantile(p5, 0.05),
-      ic_50 = quantile(p50, 0.5),
-      ic_95 = quantile(p95, 0.95)
+      ic_05 = quantile(value, 0.05),
+      ic_50 = quantile(value, 0.5),
+      ic_95 = quantile(value, 0.95)
     )
   
   message(paste0(" - Generation completed for ", pkpd_index))
@@ -122,17 +123,17 @@ csf_vpc_pred_data <- list(
   cmax_sim = generate_pred_data_replicates(sim_data = csf_data[["correlation_data"]], 
                                           obs_data = csf_data[["sim_data"]],
                                           pkpd_index = "I1_Cmax",
-                                          n_replicates = 500,
+                                          n_replicates = 100,
                                           n_bins = 20),
   auc_sim = generate_pred_data_replicates(sim_data = csf_data[["correlation_data"]], 
                                          obs_data = csf_data[["sim_data"]],
                                          pkpd_index = "I2_AUC",
-                                         n_replicates = 500,
+                                         n_replicates = 100,
                                          n_bins = 20),
   tmic_sim = generate_pred_data_replicates(sim_data = csf_data[["correlation_data"]], 
                                           obs_data = csf_data[["sim_data"]],
                                           pkpd_index = "I3_ToverMIC",
-                                          n_replicates = 500,
+                                          n_replicates = 100,
                                           n_bins = 20)
 )
 
