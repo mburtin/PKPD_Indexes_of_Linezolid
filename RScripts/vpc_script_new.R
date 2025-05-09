@@ -2,6 +2,8 @@
 library(tictoc)
 tic()
 
+require(furrr)
+
 #######
 ##  Generic functions
 ######
@@ -125,23 +127,25 @@ csf_vpc_obs_data <- list(
     tmic = generate_obs_data(csf_data[["sim_data"]], pkpd_index = "I3_ToverMIC")
   )
 
-csf_vpc_pred_data <- list(
-  cmax_sim = generate_pred_data_replicates(sim_data = csf_data[["correlation_data"]], 
-                                          obs_data = csf_data[["sim_data"]],
-                                          pkpd_index = "I1_Cmax",
-                                          n_replicates = 100,
-                                          n_bins = 20),
-  auc_sim = generate_pred_data_replicates(sim_data = csf_data[["correlation_data"]], 
-                                         obs_data = csf_data[["sim_data"]],
-                                         pkpd_index = "I2_AUC",
-                                         n_replicates = 100,
-                                         n_bins = 20),
-  tmic_sim = generate_pred_data_replicates(sim_data = csf_data[["correlation_data"]], 
-                                          obs_data = csf_data[["sim_data"]],
-                                          pkpd_index = "I3_ToverMIC",
-                                          n_replicates = 100,
-                                          n_bins = 20)
-)
+# Setup parallel processing
+plan(multisession)
+
+# Définir les paramètres à itérer
+pkpd_indices <- c("I1_Cmax", "I2_AUC", "I3_ToverMIC")
+names(pkpd_indices) <- c("cmax_sim", "auc_sim", "tmic_sim")
+
+# Parallélisation de la génération des données prédictives
+csf_vpc_pred_data <- future_map(pkpd_indices, ~{
+  generate_pred_data_replicates(
+    sim_data = csf_data[["correlation_data"]],
+    obs_data = csf_data[["sim_data"]],
+    pkpd_index = .x,
+    n_replicates = 500,
+    n_bins = 20
+  )
+}, .options = furrr_options(seed = TRUE))
+
+plan(sequential)
 
 # Stop recording time execution
 elapsed <- toc(quiet = TRUE)
