@@ -130,6 +130,8 @@ csf_vpc_obs_data <- list(
 # Setup parallel processing
 plan(multisession)
 
+options(future.globals.maxSize = 2048 * 1024^2)
+
 # Définir les paramètres à itérer
 pkpd_indices <- c("I1_Cmax", "I2_AUC", "I3_ToverMIC")
 names(pkpd_indices) <- c("cmax_sim", "auc_sim", "tmic_sim")
