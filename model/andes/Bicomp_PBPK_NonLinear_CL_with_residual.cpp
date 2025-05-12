@@ -12,7 +12,7 @@ $PARAM @annotated
 V1    : 0.97  : Plamatic volume (L/kg)
 V2    : 0.4   : Muscle volume (L/kg)
 Q     : 2.59  : Blood flow rate (L/h/kg)
-Vm    : 62.56 : Maximum elimination rate (L/h/kg)
+Vm    : 62.56 : Maximum elimination rate (mg/h/kg)
 Km    : 50.86 : Michaelis constant (mg/L)
 RBP   : 0.78  : Blood/plasma ratio
 Kp    : 0.63  : Tissue/plasma ratio
@@ -38,13 +38,13 @@ CENTRAL    : Plasma with total drug amount (mg/h/kg)
 MUSCLE     : Muscle with total drug amount (mg/h/kg)
 
 // PD compartments specific to CSF
-S         : Active bacteria population in CSF (CFU/mL)
-Rp        : Resting bacteria population in CSF (CFU/mL)
-ARoff     : Fictive adaptive resistance compartment for CSF
-ARon      : Fictive adaptive resistance compartment for CSF
+S         : Active bacteria population(CFU/mL)
+Rp        : Resting bacteria population(CFU/mL)
+ARoff     : Fictive adaptive resistance compartment
+ARon      : Fictive adaptive resistance compartment
 
-AUC_CENTRAL        : AUC of muscle concentrations (mg/L*h)
-TOVER_MIC_CENTRAL   : Time over MIC in Muscle (h)
+AUC_CENTRAL         : Total AUC in central compartment (mg/L*h)
+TOVER_MIC_CENTRAL   : T>MIC in central compartment (h)
 ////////////////////////////////
 ///       Main function      ///
 ////////////////////////////////
@@ -63,8 +63,8 @@ if(TIME == 0.0) {
 //////////////////////////////
 $ODE    
 // PK Equations
-dxdt_CENTRAL = - (Vm*(CENTRAL/V1)/(Km + (CENTRAL/V1))) + Q*RBP*((C_MUSCLE/Kp)- C_CENTRAL);
-dxdt_MUSCLE = Q*RBP*(C_CENTRAL - (C_MUSCLE/Kp));
+dxdt_CENTRAL  = - (Vm*(CENTRAL/V1)/(Km + (CENTRAL/V1))) + Q*RBP*((C_MUSCLE/Kp)- C_CENTRAL);
+dxdt_MUSCLE   = Q*RBP*(C_CENTRAL - (C_MUSCLE/Kp));
 
 // PD Equations
 double B    = S + Rp;
@@ -77,9 +77,9 @@ dxdt_ARoff  = -Kon*ARoff + Koff*ARon;
 dxdt_ARon   = -Koff*ARon + Kon*ARoff;
 
 // PKPD Indexes
-Cmax_CENTRAL          = (C_CENTRAL > Cmax_CENTRAL) ? C_CENTRAL : Cmax_CENTRAL;
-dxdt_AUC_CENTRAL      = C_CENTRAL;
-dxdt_TOVER_MIC_CENTRAL = (C_CENTRAL > MIC) ? 1 : 0;
+Cmax_CENTRAL            = (C_CENTRAL > Cmax_CENTRAL) ? C_CENTRAL : Cmax_CENTRAL;
+dxdt_AUC_CENTRAL        = C_CENTRAL;
+dxdt_TOVER_MIC_CENTRAL  = (C_CENTRAL > MIC) ? 1 : 0;
 
 $SIGMA @labels PD_RES
 0.38

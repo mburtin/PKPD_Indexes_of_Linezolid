@@ -9,7 +9,7 @@ $PROB
 /// Parameters definition  ///
 //////////////////////////////
 $PARAM @annotated
-V1     : 0.27  : Plamatic volume (L/kg)
+V1     : 0.27   : Plamatic volume (L/kg)
 V2     : 0.402  : Peripheral volume (L/kg)
 Q      : 0.504  : Blood flow rate (L/h/kg)
 CL     : 0.0649 : Clearance (L/h/kg)
@@ -40,13 +40,13 @@ CENTRAL    : Plasma with total drug amount (mg/h/kg)
 PERIPHERAL : Peripheral compartment with total drug amount (mg/h/kg)
 
 // PD compartments specific to CSF
-S         : Active bacteria population in CSF (CFU/mL)
-Rp        : Resting bacteria population in CSF (CFU/mL)
-ARoff     : Fictive adaptive resistance compartment for CSF
-ARon      : Fictive adaptive resistance compartment for CSF
+S         : Active bacteria population (CFU/mL)
+Rp        : Resting bacteria population (CFU/mL)
+ARoff     : Fictive adaptive resistance compartment
+ARon      : Fictive adaptive resistance compartment
 
-AUC_CENTRAL        : AUC of muscle concentrations (mg/L*h)
-TOVER_MIC_CENTRAL   : Time over MIC in Muscle (h)
+AUC_CENTRAL         : Total AUC in central compartment (mg/L*h)
+TOVER_MIC_CENTRAL   : T>MIC in central compartment (h)
 
 ////////////////////////////////
 ///       Main function      ///
@@ -89,8 +89,8 @@ dxdt_AUC_CENTRAL       = C_CENTRAL;
 dxdt_TOVER_MIC_CENTRAL = (C_CENTRAL > MIC) ? 1 : 0;
 
 $TABLE
-double C_CENTRAL  = CENTRAL/V1;
-double C_PERIPHERAL  = PERIPHERAL/V2;
+double C_CENTRAL    = CENTRAL/V1;
+double C_PERIPHERAL = PERIPHERAL/V2;
 
 //////////////////////////////
 ///   Outputs definition   ///

@@ -9,8 +9,8 @@ $PROB
 /// Parameters definition  ///
 //////////////////////////////
 $PARAM @annotated
-CL    : 0.89 : Clearance (L/h/kg)
-V1    : 1.21 : Plama volume (L/kg)
+CL    : 0.89  : Clearance (L/h/kg)
+V1    : 1.21  : Plama volume (L/kg)
 FU    : 0.75  : Fraction unbound in plasma
 
 $PARAM @annotated   // PD parameters
@@ -32,14 +32,14 @@ MIC  : 2.0  : Minimal inhibitory concentration (mg/L)
 $CMT @annotated
 CENTRAL    : Plasma with total drug amount (mg/h/kg)
 
-// PD compartments specific to CSF
-S         : Active bacteria population in CSF (CFU/mL)
-Rp        : Resting bacteria population in CSF (CFU/mL)
-ARoff     : Fictive adaptive resistance compartment for CSF
-ARon      : Fictive adaptive resistance compartment for CSF
+// PD compartments
+S         : Active bacteria population (CFU/mL)
+Rp        : Resting bacteria population (CFU/mL)
+ARoff     : Fictive adaptive resistance compartment
+ARon      : Fictive adaptive resistance compartment
 
-AUC_CENTRAL        : AUC of muscle concentrations (mg/L*h)
-TOVER_MIC_CENTRAL   : Time over MIC in Muscle (h)
+AUC_CENTRAL         : Total AUC in central compartment (mg/L*h)
+TOVER_MIC_CENTRAL   : T>MIC in central compartment (h)
 ////////////////////////////////
 ///       Main function      ///
 ////////////////////////////////
@@ -73,9 +73,9 @@ dxdt_ARoff  = -Kon*ARoff + Koff*ARon;
 dxdt_ARon   = -Koff*ARon + Kon*ARoff;
 
 // PKPD Indexes
-Cmax_CENTRAL          = (C_CENTRAL > Cmax_CENTRAL) ? C_CENTRAL : Cmax_CENTRAL;
-dxdt_AUC_CENTRAL      = C_CENTRAL;
-dxdt_TOVER_MIC_CENTRAL = (C_CENTRAL > MIC) ? 1 : 0;
+Cmax_CENTRAL            = (C_CENTRAL > Cmax_CENTRAL) ? C_CENTRAL : Cmax_CENTRAL;
+dxdt_AUC_CENTRAL        = C_CENTRAL;
+dxdt_TOVER_MIC_CENTRAL  = (C_CENTRAL > MIC) ? 1 : 0;
 
 $TABLE
 double C_CENTRAL  = CENTRAL/V1;

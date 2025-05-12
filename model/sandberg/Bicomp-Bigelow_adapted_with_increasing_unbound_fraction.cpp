@@ -9,12 +9,12 @@ $PROB
 /// Parameters definition  ///
 //////////////////////////////
 $PARAM @annotated
-V1     : 0.27  : Plamatic volume (L/kg)
+V1     : 0.27   : Plamatic volume (L/kg)
 V2     : 0.402  : Peripheral volume (L/kg)
 Q      : 0.504  : Blood flow rate (L/h/kg)
 CL     : 0.0649 : Clearance (L/h/kg)
-Vmax   : 16.56   : Maximum rate of metabolism (mg/h/kg)
-Km     : 18.37   : Michaelis-Menten constant (mg/L)
+Vmax   : 16.56  : Maximum rate of metabolism (mg/h/kg)
+Km     : 18.37  : Michaelis-Menten constant (mg/L)
 Ka     : 2.89   : Absorption rate constant (h^-1)
 FU     : 0.75   : Unbound fraction
 
@@ -40,13 +40,13 @@ CENTRAL    : Plasma with total drug amount (mg/h/kg)
 PERIPHERAL : Peripheral compartment with total drug amount (mg/h/kg)
 
 // PD compartments specific to CSF
-S         : Active bacteria population in CSF (CFU/mL)
-Rp        : Resting bacteria population in CSF (CFU/mL)
-ARoff     : Fictive adaptive resistance compartment for CSF
-ARon      : Fictive adaptive resistance compartment for CSF
+S         : Active bacteria population(CFU/mL)
+Rp        : Resting bacteria population(CFU/mL)
+ARoff     : Fictive adaptive resistance compartment
+ARon      : Fictive adaptive resistance compartment
 
-AUC_CENTRAL        : AUC of muscle concentrations (mg/L*h)
-TOVER_MIC_CENTRAL   : Time over MIC in Muscle (h)
+AUC_CENTRAL         : Total AUC in central compartment (mg/L*h)
+TOVER_MIC_CENTRAL   : T>MIC in central compartment (h)
 
 ////////////////////////////////
 ///       Main function      ///
@@ -75,8 +75,8 @@ double k10   = CL/V1; // (h)
 double k12   = Q/V1;  // (h)
 double k21   = Q/V2;  // (h)
 
-dxdt_A  = -Ka*A;
-dxdt_CENTRAL = Ka*A - k12*CENTRAL + k21*PERIPHERAL - k10*CENTRAL - (Vmax*(CENTRAL/V1)/(Km + (CENTRAL/V1)));
+dxdt_A          = -Ka*A;
+dxdt_CENTRAL    = Ka*A - k12*CENTRAL + k21*PERIPHERAL - k10*CENTRAL - (Vmax*(CENTRAL/V1)/(Km + (CENTRAL/V1)));
 dxdt_PERIPHERAL = k12*CENTRAL - k21*PERIPHERAL;
 
 // PD Equations
@@ -95,8 +95,8 @@ dxdt_AUC_CENTRAL       = C_CENTRAL;
 dxdt_TOVER_MIC_CENTRAL = (C_CENTRAL > MIC) ? 1 : 0;
 
 $TABLE
-double C_CENTRAL  = CENTRAL/V1;
-double C_PERIPHERAL  = PERIPHERAL/V2;
+double C_CENTRAL    = CENTRAL/V1;
+double C_PERIPHERAL = PERIPHERAL/V2;
 
 //////////////////////////////
 ///   Outputs definition   ///
