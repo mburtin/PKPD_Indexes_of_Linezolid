@@ -2,21 +2,20 @@
 ##  Generic functions
 ######
 generate_obs_data <- function(data) {
-  
   x <- data |>
     ungroup() |>
     filter(DoseGroup != "control") |>
     select(STRN, DoseGroup, AMT, ID, PKPD_Index, value, deltaLog10CFU)
-  
+
   if (any(is.na(x))) {
     stop("NA values in obs_data")
   }
-  
+
   return(x)
 }
 
 generate_pred_data <- function(sim_data, obs_data, pkpd_index, n_sim) {
-  x <- sim_data |> 
+  x <- sim_data |>
     mutate(PKPD_Index = case_when(
       PKPD_Index %in% c("CENTRAL_Cmax", "CSF_Cmax") ~ "I1_Cmax",
       PKPD_Index %in% c("CENTRAL_AUC_MIC", "CSF_AUC_MIC") ~ "I2_AUC",
@@ -26,18 +25,21 @@ generate_pred_data <- function(sim_data, obs_data, pkpd_index, n_sim) {
     select(-c(data, nls, Rsq, Adj.Rsq, Target_stasis, Target_1LogKill, Target_2LogKill)) |>
     filter(PKPD_Index == pkpd_index) |>
     ungroup()
-  
-   x <- x |> left_join(obs_data |> filter(PKPD_Index == pkpd_index), by = c("PKPD_Index")) |>
-     slice(rep(1:n(), each = n_sim)) |>
-     mutate(REP = rep(1:n_sim, length.out = n()),
-            PRED  = Emax_model(value, I0, Imax, IC50, H),
-            IPRED = Emax_model(value, I0, Imax, IC50, H) + rnorm(n(), mean = 0, sd = Sd_Residuals)) |>
-     select(STRN, DoseGroup, AMT, ID, PKPD_Index, REP, value, deltaLog10CFU, PRED, IPRED)
-   
-   if (any(is.na(x))) {
-     stop("NA values in sim_data")
-   }
-   
+
+  x <- x |>
+    left_join(obs_data |> filter(PKPD_Index == pkpd_index), by = c("PKPD_Index")) |>
+    slice(rep(1:n(), each = n_sim)) |>
+    mutate(
+      REP = rep(1:n_sim, length.out = n()),
+      PRED = Emax_model(value, I0, Imax, IC50, H),
+      IPRED = Emax_model(value, I0, Imax, IC50, H) + rnorm(n(), mean = 0, sd = Sd_Residuals)
+    ) |>
+    select(STRN, DoseGroup, AMT, ID, PKPD_Index, REP, value, deltaLog10CFU, PRED, IPRED)
+
+  if (any(is.na(x))) {
+    stop("NA values in sim_data")
+  }
+
   return(x)
 }
 
@@ -110,34 +112,46 @@ cut_sim_bins <- function(data, seq_start, seq_end, seq_steps) {
 ######
 csf_vpc_data <- list(
   obs_data = generate_obs_data(csf_data[["sim_data"]]),
-  cmax_sim = generate_pred_data(sim_data = csf_data[["correlation_data"]], 
-                                obs_data = generate_obs_data(csf_data[["sim_data"]]),
-                                pkpd_index = "I1_Cmax",
-                                n_sim = 100),
-  auc_sim = generate_pred_data(sim_data = csf_data[["correlation_data"]], 
-                               obs_data = generate_obs_data(csf_data[["sim_data"]]),
-                               pkpd_index = "I2_AUC",
-                               n_sim = 100),
-  tmic_sim = generate_pred_data(sim_data = csf_data[["correlation_data"]], 
-                                obs_data = generate_obs_data(csf_data[["sim_data"]]),
-                                pkpd_index = "I3_ToverMIC",
-                                n_sim = 100)
+  cmax_sim = generate_pred_data(
+    sim_data = csf_data[["correlation_data"]],
+    obs_data = generate_obs_data(csf_data[["sim_data"]]),
+    pkpd_index = "I1_Cmax",
+    n_sim = 100
+  ),
+  auc_sim = generate_pred_data(
+    sim_data = csf_data[["correlation_data"]],
+    obs_data = generate_obs_data(csf_data[["sim_data"]]),
+    pkpd_index = "I2_AUC",
+    n_sim = 100
+  ),
+  tmic_sim = generate_pred_data(
+    sim_data = csf_data[["correlation_data"]],
+    obs_data = generate_obs_data(csf_data[["sim_data"]]),
+    pkpd_index = "I3_ToverMIC",
+    n_sim = 100
+  )
 )
 
 csf_vpc_with_plasma_index_data <- list(
   obs_data = generate_obs_data(csf_with_plasma_index_data[["sim_data"]]),
-  cmax_sim = generate_pred_data(sim_data = csf_with_plasma_index_data[["correlation_data"]], 
-                                obs_data = generate_obs_data(csf_with_plasma_index_data[["sim_data"]]),
-                                pkpd_index = "I1_Cmax",
-                                n_sim = 100),
-  auc_sim = generate_pred_data(sim_data = csf_with_plasma_index_data[["correlation_data"]], 
-                               obs_data = generate_obs_data(csf_with_plasma_index_data[["sim_data"]]),
-                               pkpd_index = "I2_AUC",
-                               n_sim = 100),
-  tmic_sim = generate_pred_data(sim_data = csf_with_plasma_index_data[["correlation_data"]], 
-                                obs_data = generate_obs_data(csf_with_plasma_index_data[["sim_data"]]),
-                                pkpd_index = "I3_ToverMIC",
-                                n_sim = 100)
+  cmax_sim = generate_pred_data(
+    sim_data = csf_with_plasma_index_data[["correlation_data"]],
+    obs_data = generate_obs_data(csf_with_plasma_index_data[["sim_data"]]),
+    pkpd_index = "I1_Cmax",
+    n_sim = 100
+  ),
+  auc_sim = generate_pred_data(
+    sim_data = csf_with_plasma_index_data[["correlation_data"]],
+    obs_data = generate_obs_data(csf_with_plasma_index_data[["sim_data"]]),
+    pkpd_index = "I2_AUC",
+    n_sim = 100
+  ),
+  tmic_sim = generate_pred_data(
+    sim_data = csf_with_plasma_index_data[["correlation_data"]],
+    obs_data = generate_obs_data(csf_with_plasma_index_data[["sim_data"]]),
+    pkpd_index = "I3_ToverMIC",
+    n_sim = 100
+  )
 )
 
 gc()
