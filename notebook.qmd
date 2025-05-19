@@ -106,32 +106,25 @@ The code below will generate VPCs plots for fCmax/MIC, fAUC/MIC and fT>MIC for C
 ## Execute VPC scripts
 source("RScripts/vpc_script.R")
 
-## Allow to setup quickly wich VPC data you want to generate
-bin_data = csf_vpc_with_plasma_index_data
-#bin_data = csf_vpc_data
-
 ## Generate VPC binned data
-binned_data <- list(
-  cmax_obs = bin_data$obs_data |>
-  filter(PKPD_Index == "I1_Cmax") |>
-  ntile_obs_bins(20),
+csf_binned_vpc_data <- list(
+  cmax_obs = csf_obs_vpc_data$cmax,
+  auc_obs = csf_obs_vpc_data$auc,
+  tmic_obs = csf_obs_vpc_data$tmic,
+  
+  cmax_sim = csf_pred_vpc_data$cmax,
+  auc_sim = csf_pred_vpc_data$auc,
+  tmic_sim = csf_pred_vpc_data$tmic
+)
 
-  cmax_sim = bin_data$cmax_sim |>
-    ntile_sim_bins(20),
+plasma_binned_vpc_data <- list(
+  cmax_obs = plasma_obs_vpc_data$cmax,
+  auc_obs = plasma_obs_vpc_data$auc,
+  tmic_obs = plasma_obs_vpc_data$tmic,
   
-  auc_obs = bin_data$obs_data |> 
-    filter(PKPD_Index == "I2_AUC") |>
-    ntile_obs_bins(20),
-  
-  auc_sim = bin_data$auc_sim |>
-    ntile_sim_bins(20),
-  
-  tmic_obs = bin_data$obs_data |>
-    filter(PKPD_Index == "I3_ToverMIC") |>
-    cut_obs_bins(0, 100, 20),
-  
-  tmic_sim = bin_data$tmic_sim |>
-    cut_sim_bins(0, 100, 20)
+  cmax_sim = plasma_pred_vpc_data$cmax,
+  auc_sim = plasma_pred_vpc_data$auc,
+  tmic_sim = plasma_pred_vpc_data$tmic
 )
 ```
 
@@ -139,8 +132,8 @@ binned_data <- list(
 source("RScripts/vpc_plots_script.R")
 
 ## Generate VPC plots
-VPC_Plots(binned_data, "VPC - CSF with plasma indices.png", csf_with_plasma_index_data)
-#VPC_Plots(binned_data, "VPC - CSF.png", csf_data)
+VPC_Plots(plasma_binned_vpc_data, "VPC - CSF with plasma indices.png", csf_with_plasma_index_data)
+VPC_Plots(csf_binned_vpc_data, "VPC - CSF.png", csf_data)
 ```
 
 ## Target estimations for each indexes
